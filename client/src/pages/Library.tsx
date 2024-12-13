@@ -10,9 +10,20 @@ export function Library() {
   const [books, setBooks] = useState<{id: string, title: string}[]>([]);
 
   const handleFileUpload = async (file: File) => {
-    // Stub - would normally upload to server
-    const id = Math.random().toString(36).substring(7);
-    setBooks([...books, {id, title: file.name}]);
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const response = await fetch("/api/books", {
+      method: "POST",
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to upload file");
+    }
+    
+    const data = await response.json();
+    setBooks([...books, { id: data.id, title: file.name }]);
   };
 
   return (

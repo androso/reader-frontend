@@ -1,8 +1,7 @@
 import ePub from "epubjs";
 
 export function initReader(element: HTMLElement, bookId: string) {
-  // In production this would fetch from an API
-  const book = ePub("/sample.epub");
+  const book = ePub(`/api/books/${bookId}`);
   
   const rendition = book.renderTo(element, {
     width: "100%",

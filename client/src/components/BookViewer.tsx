@@ -21,7 +21,8 @@ export function BookViewer({ bookId }: BookViewerProps) {
     <ScrollArea className="flex-1 bg-background">
       <div 
         ref={containerRef} 
-        className="min-h-[calc(100vh-4rem)] mx-auto max-w-2xl px-4 py-8 prose prose-sm prose-invert"
+        className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-2xl px-4 py-8 prose prose-sm prose-invert"
+        style={{ height: 'calc(100vh - 4rem)' }}
       />
     </ScrollArea>
   );
