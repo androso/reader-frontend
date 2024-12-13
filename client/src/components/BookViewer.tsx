@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ReactReader } from "react-reader";
+import { ReactReader } from "@/components/reader/ReactReader/ReactReader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,7 +25,7 @@ export function BookViewer({ bookId }: BookViewerProps) {
           showToc={true}
           loadingView={<div className="p-4">Loading EPUB file...</div>}
           epubInitOptions={{
-            openAs: 'epub'
+            openAs: 'epub',
           }}
           epubOptions={{
             flow: "scrolled",

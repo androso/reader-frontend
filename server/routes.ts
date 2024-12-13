@@ -35,7 +35,7 @@ export function registerRoutes(app: Express): Server {
     }
     // Stub - would normally save to database
     res.json({ 
-      id: Math.random().toString(36).substring(7),
+      id: req.file.filename,
       path: req.file.path 
     });
   });
