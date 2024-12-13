@@ -11,9 +11,9 @@ export function BookViewer({ bookId }: BookViewerProps) {
   const [location, setLocation] = useState<string | number>(0);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
+  
   return (
-    <ScrollArea className="flex-1 bg-background">
+    <ScrollArea className="flex-1 bg-background [&_.arrow]:hidden">
       <div 
         className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-2xl"
         style={{ height: 'calc(100vh - 4rem)', position: 'relative' }}
@@ -29,7 +29,7 @@ export function BookViewer({ bookId }: BookViewerProps) {
           }}
           epubOptions={{
             flow: "scrolled",
-            manager: "continuous"
+            manager: "continuous",
           }}
           getRendition={(rendition) => {
             rendition.on('started', () => {
