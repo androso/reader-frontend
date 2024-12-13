@@ -18,10 +18,10 @@ export function BookViewer({ bookId }: BookViewerProps) {
   }, [bookId]);
 
   return (
-    <ScrollArea className="flex-1 bg-white">
+    <ScrollArea className="flex-1 bg-background">
       <div 
         ref={containerRef} 
-        className="min-h-[calc(100vh-4rem)] mx-auto max-w-3xl px-4"
+        className="min-h-[calc(100vh-4rem)] mx-auto max-w-2xl px-4 py-8 prose prose-sm prose-invert"
       />
     </ScrollArea>
   );

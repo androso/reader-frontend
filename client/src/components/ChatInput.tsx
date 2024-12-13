@@ -14,19 +14,19 @@ export function ChatInput() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t">
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t border-border">
       <form 
         onSubmit={handleSubmit}
-        className="max-w-3xl mx-auto flex gap-2 items-center"
+        className="max-w-2xl mx-auto flex gap-3 items-center"
       >
         <Input
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Ask a question..."
-          className="flex-1"
+          placeholder="Ask Claude about this book..."
+          className="flex-1 bg-background/50"
         />
-        <Button type="submit" size="icon">
-          <SendHorizontal className="h-4 w-4" />
+        <Button type="submit" size="icon" variant="ghost">
+          <SendHorizontal className="h-5 w-5" />
         </Button>
       </form>
     </div>
