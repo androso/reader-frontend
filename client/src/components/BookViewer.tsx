@@ -1,29 +1,39 @@
-import { useEffect, useRef } from "react";
+import { useState } from "react";
+import { ReactReader } from "react-reader";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { initReader } from "@/lib/epub";
 
 interface BookViewerProps {
   bookId: string;
 }
 
 export function BookViewer({ bookId }: BookViewerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    
-    // Initialize EPUB reader
-    const cleanup = initReader(containerRef.current, bookId);
-    return cleanup;
-  }, [bookId]);
+  const [location, setLocation] = useState<string | number>(0);
 
   return (
     <ScrollArea className="flex-1 bg-background">
       <div 
-        ref={containerRef} 
-        className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-2xl px-4 py-8 prose prose-sm prose-invert"
-        style={{ height: 'calc(100vh - 4rem)' }}
-      />
+        className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-2xl"
+        style={{ height: 'calc(100vh - 4rem)', position: 'relative' }}
+      >
+        <ReactReader
+          url={`/api/books/${bookId}`}
+          location={location}
+          locationChanged={(loc: string | number) => setLocation(loc)}
+          showToc={true}
+          epubOptions={{
+            flow: "scrolled",
+            manager: "continuous"
+          }}
+          styles={{
+            container: {
+              backgroundColor: 'transparent'
+            },
+            readerArea: {
+              backgroundColor: 'transparent'
+            }
+          }}
+        />
+      </div>
     </ScrollArea>
   );
 }
