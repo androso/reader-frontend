@@ -42,7 +42,16 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/books/:id", (req, res) => {
     // Stub - would normally fetch from database
-    res.sendFile(path.resolve("./uploads", req.params.id));
+    const filePath = path.resolve("./uploads", req.params.id);
+    if (!filePath.startsWith(path.resolve("./uploads"))) {
+      return res.status(403).send('Invalid file path');
+    }
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('Error serving file:', err);
+        res.status(500).send('Error serving file');
+      }
+    });
   });
 
   const httpServer = createServer(app);
