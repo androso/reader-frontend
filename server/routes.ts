@@ -2,6 +2,8 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
+import passport from "passport";
+import * as GoogleStrategy from 'passport-google-oidc';
 
 interface MulterFile {
   originalname: string;
@@ -16,16 +18,24 @@ interface FileRequest extends Request {
 const upload = multer({
   storage: multer.diskStorage({
     destination: "./uploads",
-    filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+    filename: (
+      _req: Request,
+      file: Express.Multer.File,
+      cb: (error: Error | null, filename: string) => void,
+    ) => {
       cb(null, Date.now() + path.extname(file.originalname));
-    }
+    },
   }),
-  fileFilter: (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    if (path.extname(file.originalname) !== '.epub') {
-      return cb(new Error('Only EPUB files are allowed'));
+  fileFilter: (
+    _req: Request,
+    file: Express.Multer.File,
+    cb: multer.FileFilterCallback,
+  ) => {
+    if (path.extname(file.originalname) !== ".epub") {
+      return cb(new Error("Only EPUB files are allowed"));
     }
     cb(null, true);
-  }
+  },
 });
 
 export function registerRoutes(app: Express): Server {
@@ -34,9 +44,9 @@ export function registerRoutes(app: Express): Server {
       return res.status(400).json({ message: "No file uploaded" });
     }
     // Stub - would normally save to database
-    res.json({ 
+    res.json({
       id: req.file.filename,
-      path: req.file.path 
+      path: req.file.path,
     });
   });
 
@@ -44,12 +54,12 @@ export function registerRoutes(app: Express): Server {
     // Stub - would normally fetch from database
     const filePath = path.resolve("./uploads", req.params.id);
     if (!filePath.startsWith(path.resolve("./uploads"))) {
-      return res.status(403).send('Invalid file path');
+      return res.status(403).send("Invalid file path");
     }
     res.sendFile(filePath, (err) => {
       if (err) {
-        console.error('Error serving file:', err);
-        res.status(500).send('Error serving file');
+        console.error("Error serving file:", err);
+        res.status(500).send("Error serving file");
       }
     });
   });

@@ -1,5 +1,3 @@
-
-// server/prod.ts
 import { startServer } from "./index";
 import express from "express";
 import path from "path";

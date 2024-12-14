@@ -1,8 +1,8 @@
 import express from "express";
 import { registerRoutes } from "./routes";
-// import { setupVite, serveStatic, log } from "./vite";
 
 type serverSetup = (app: express.Application, server: any) => Promise<void>;
+
 
 export async function startServer(
   mode: "development" | "production",
