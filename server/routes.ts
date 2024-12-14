@@ -2,8 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
-import passport from "passport";
-import * as GoogleStrategy from 'passport-google-oidc';
+import { requireAuth } from "./auth";
 
 interface MulterFile {
   originalname: string;
@@ -39,7 +38,22 @@ const upload = multer({
 });
 
 export function registerRoutes(app: Express): Server {
-  app.post("/api/books", upload.single("file"), (req: FileRequest, res) => {
+  // Authentication status endpoint
+  app.get("/api/auth/status", (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json({
+        authenticated: true,
+        user: req.user,
+      });
+    } else {
+      res.json({
+        authenticated: false,
+      });
+    }
+  });
+
+  // Protected routes
+  app.post("/api/books", requireAuth, upload.single("file"), (req: FileRequest, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
@@ -50,7 +64,7 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
-  app.get("/api/books/:id", (req, res) => {
+  app.get("/api/books/:id", requireAuth, (req, res) => {
     // Stub - would normally fetch from database
     const filePath = path.resolve("./uploads", req.params.id);
     if (!filePath.startsWith(path.resolve("./uploads"))) {

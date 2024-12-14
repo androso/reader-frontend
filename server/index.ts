@@ -1,8 +1,8 @@
 import express from "express";
 import { registerRoutes } from "./routes";
+import { configureAuth } from "./auth";
 
 type serverSetup = (app: express.Application, server: any) => Promise<void>;
-
 
 export async function startServer(
   mode: "development" | "production",
@@ -11,6 +11,9 @@ export async function startServer(
   const app = express();
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
+
+  // Configure authentication
+  configureAuth(app);
 
   // logging middleware
   app.use((req, res, next) => {
@@ -36,13 +39,15 @@ export async function startServer(
           logLine = logLine.slice(0, 79) + "…";
         }
 
-        // log(logLine);
+        console.log(logLine);
       }
     });
 
     next();
   });
+
   const server = registerRoutes(app);
+
   // Error handling middleware
   app.use(
     (
@@ -62,6 +67,5 @@ export async function startServer(
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`serving on port ${PORT}`)
-    // log(`serving on port ${PORT}`);
   });
 }
