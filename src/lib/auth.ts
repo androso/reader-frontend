@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext } from 'react';
 import { useSession } from "next-auth/react";
 
 export interface User {

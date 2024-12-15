@@ -12,13 +12,7 @@ export default function Page() {
 	const router = useRouter();
 	const [books, setBooks] = useState<{ id: string; title: string }[]>([]);
 	const { isAuthenticated, isLoading, user } = useAuth();
-
-	useEffect(() => {
-		if (!isLoading && isAuthenticated == false) {
-			router.push("/login");
-		}
-	}, [isAuthenticated]);
-
+	
 	const handleFileUpload = async (file: File) => {
 		const formData = new FormData();
 		formData.append("file", file);
@@ -36,6 +30,26 @@ export default function Page() {
 		setBooks([...books, { id: data.id, title: file.name }]);
 	};
 
+	useEffect(() => {
+		if (isLoading == false) {
+			if (isAuthenticated == false) {
+				router.push("/login");
+			}
+			console.log({isLoading, isAuthenticated})
+		} else {
+			console.log("loading", {isLoading, isAuthenticated})
+		}
+	}, [isAuthenticated, isLoading]);
+
+
+	if (isLoading) {
+		return  "...";	
+	} 
+
+	if (!isAuthenticated) {
+		return null;
+	}
+	
 	return (
 		<div className="container mx-auto p-8">
 			<div className="flex justify-between items-center mb-8">
