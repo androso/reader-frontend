@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { signIn, useSession } from 'next-auth/react';
 
 export default function Login() {
+	console.log("hello from login");
 	const router = useRouter();
 	const { isAuthenticated } = useAuth();
 	const { data: session } = useSession();
