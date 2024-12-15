@@ -3,24 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
-
-import { signIn, useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
+import { useEffect } from "react";
 
 export default function Login() {
-	console.log("hello from login");
 	const router = useRouter();
 	const { isAuthenticated } = useAuth();
-	const { data: session } = useSession();
 
-	if (isAuthenticated) {
-		router.push("/");
-		return null;
-	}
-
-	const handleGoogleLogin = () => {
-		window.location.href = "/auth/google";
-	};
-
+	useEffect(() => {
+		if (isAuthenticated) {
+			router.push("/");
+		}
+	}, [isAuthenticated])
+	
 	return (
 		<div className="container mx-auto flex items-center justify-center min-h-screen">
 			<Card className="w-full max-w-md p-6">
