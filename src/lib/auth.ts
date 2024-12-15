@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import { useSession } from "next-auth/react";
 
 export interface User {
   id: string;
@@ -19,7 +20,15 @@ export const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const { data: session, status } = useSession();
+  
+  return {
+    isAuthenticated: status === "authenticated",
+    isLoading: status === "loading",
+    user: session?.user,
+  };
+};
 
 export async function checkAuthStatus(): Promise<AuthContextType> {
   try {
