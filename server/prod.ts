@@ -27,4 +27,4 @@ async function serveStatic(app: any) {
   });
 }
 
-startServer('production', serveStatic);
+startServer(serveStatic);

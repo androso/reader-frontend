@@ -75,4 +75,4 @@ export async function setupVite(app: any, server: any) {
   });
 }
 
-startServer('development', setupVite);
+startServer(setupVite);

@@ -5,7 +5,6 @@ import { configureAuth } from "./auth";
 type serverSetup = (app: express.Application, server: any) => Promise<void>;
 
 export async function startServer(
-  mode: "development" | "production",
   setup: serverSetup,
 ) {
   const app = express();
@@ -13,6 +12,7 @@ export async function startServer(
   app.use(express.urlencoded({ extended: false }));
 
   // Configure authentication
+
   configureAuth(app);
 
   // logging middleware
