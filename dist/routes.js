@@ -17,9 +17,17 @@ function requireAuth(req, res, next) {
 }
 
 // server/routes.ts
+import fs from "fs";
+
+// Ensure uploads directory exists
+const uploadDir = "./uploads";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 var upload = multer({
   storage: multer.diskStorage({
-    destination: "./uploads",
+    destination: uploadDir,
     filename: (_req, file, cb) => {
       cb(null, Date.now() + path.extname(file.originalname));
     }
@@ -44,14 +52,39 @@ function registerRoutes(app) {
       });
     }
   });
-  app.post("/api/books", requireAuth, upload.single("file"), (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+  app.post("/api/books", requireAuth, async (req, res) => {
+    try {
+      // Ensure uploads directory exists (redundant, but kept for clarity)
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      upload.single("file")(req, res, (err) => {
+        if (err) {
+          console.error("Upload error:", err);
+          return res.status(400).json({ 
+            message: "Error uploading file",
+            details: err.message 
+          });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        res.json({
+          id: req.file.filename,
+          path: req.file.path,
+          message: "File uploaded successfully"
+        });
+      });
+    } catch (error) {
+      console.error("Server error during upload:", error);
+      res.status(500).json({ 
+        message: "Server error during upload",
+        details: error.message 
+      });
     }
-    res.json({
-      id: req.file.filename,
-      path: req.file.path
-    });
   });
   app.get("/api/books/:id", requireAuth, (req, res) => {
     const filePath = path.resolve("./uploads", req.params.id);
