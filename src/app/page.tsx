@@ -11,10 +11,10 @@ import { useAuth } from "@/lib/auth";
 export default function Page() {
 	const router = useRouter();
 	const [books, setBooks] = useState<{ id: string; title: string }[]>([]);
-	const { isAuthenticated } = useAuth();
+	const { isAuthenticated, isLoading, user } = useAuth();
 
 	useEffect(() => {
-		if (isAuthenticated == false) {
+		if (!isLoading && isAuthenticated == false) {
 			router.push("/login");
 		}
 	}, [isAuthenticated]);
