@@ -22,7 +22,8 @@ export const authOptions: NextAuthOptions = {
 	callbacks: {
 		async session({ session, token }) {
 			if (session.user) {
-				session.user.id = token.sub!;
+				const user = await getUserByGoogleId(token.sub)
+				session.user.id = user.id;
 			}
 			return session;
 		},
