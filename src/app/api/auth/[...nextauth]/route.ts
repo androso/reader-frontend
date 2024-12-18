@@ -1,7 +1,7 @@
-import { validateEnv } from '@/lib/env';
 import '../../../../lib/env' 
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { getUserByGoogleId, createUserFromGoogle } from "@/actions/userActions";
 
 const handler = NextAuth({
 	providers: [
@@ -19,6 +19,26 @@ const handler = NextAuth({
 		signIn: "/login",
 	},
 	secret: process.env.NEXTAUTH_SECRET,
+	callbacks: {
+		async signIn({ user, account}) {
+			if (account?.provider === "google") {
+				// check if it already exists
+				const existingUser = await getUserByGoogleId(account.providerAccountId);
+
+				// if it doesn't, then create it
+				if (!existingUser) {
+					await createUserFromGoogle({
+						email: user.email!,
+						googleId: account.providerAccountId,
+						name: user.name!,
+						image: user.image!
+					})
+				}
+				// otherwise just continue
+			}
+			return true;
+		}
+	}
 });
 
 export { handler as GET, handler as POST };
