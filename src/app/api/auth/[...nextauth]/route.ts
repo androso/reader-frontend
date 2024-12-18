@@ -4,14 +4,6 @@ import GoogleProvider from "next-auth/providers/google";
 import { getUserByGoogleId, createUserFromGoogle } from "@/actions/userActions";
 
 export const authOptions: NextAuthOptions = {
-  callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-      }
-      return session;
-    },
-  },
 	providers: [
 		GoogleProvider({
 			clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -28,6 +20,12 @@ export const authOptions: NextAuthOptions = {
 	},
 	secret: process.env.NEXTAUTH_SECRET,
 	callbacks: {
+		async session({ session, token }) {
+			if (session.user) {
+				session.user.id = token.sub!;
+			}
+			return session;
+		},
 		async signIn({ user, account}) {
 			if (account?.provider === "google") {
 				// check if it already exists
