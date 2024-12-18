@@ -1,9 +1,20 @@
 import { NextRequest } from "next/server";
-import path from 'path'
-import fs from 'fs/promises'
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
+import { db } from "@/db";
+import { uploadFile } from "@/lib/storage";
+import { books } from "@/db/schema";
 
 export async function POST(request: NextRequest) {
    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return Response.json({
+                error: "Unauthorized"
+            }, {
+                status: 401
+            }) 
+        }
         const formData = await request.formData();
         const file = formData.get("file") as File | null;
 
@@ -15,19 +26,21 @@ export async function POST(request: NextRequest) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes)
 
-        // create dir in case it doesn't exist
-        const uploadDir = path.join(process.cwd(), 'public/uploads')
-        
-        await fs.mkdir(uploadDir, { recursive: true })
+        // we generate a file key (which would be the filename like "testing.epub")
+        const fileKey = `${session.user.id}/${Date.now()}-${file.name}`
+        await uploadFile(fileKey, buffer);
 
-        const uniqueFilename = Date.now() + path.extname(file.name)
-        await fs.writeFile(path.join(uploadDir, uniqueFilename), buffer)
+        // linking file uploaded to user
+        const [book] = await db.insert(books).values({
+            title: file.name,
+            userId: session.user.id,
+            fileKey: fileKey
+        }).returning();
 
-       return Response.json({
-           message: "File upload successful",
-           id: uniqueFilename,
-           title: file.name
-       })
+        return Response.json({
+            message: "File upload successfull",
+            book
+        });
    } catch(err) {
        console.error("Upload Error", err)
 
