@@ -1,7 +1,7 @@
-"use server"
+"use server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export async function createUserFromGoogle(userData: {
   email: string;
@@ -9,24 +9,28 @@ export async function createUserFromGoogle(userData: {
   name: string;
   image?: string;
 }) {
-  const result = await db.insert(users).values({
-    email: userData.email,
-    googleId: userData.googleId,
-    name: userData.name,
-    image: userData.image,
-  }).returning();
-  
+  const result = await db
+    .insert(users)
+    .values({
+      email: userData.email,
+      googleId: userData.googleId,
+      name: userData.name,
+      image: userData.image,
+    })
+    .returning();
+
   return result[0];
 }
 
 export async function getUserByEmail(email: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.email, email)
-  });
+  const result = await db.select().from(users).where(eq(users.email, email));
+  return result[0];
 }
 
 export async function getUserByGoogleId(googleId: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.googleId, googleId)
-  });
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.googleId, googleId));
+  return result[0];
 }
