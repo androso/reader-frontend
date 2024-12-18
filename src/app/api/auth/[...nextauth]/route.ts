@@ -4,6 +4,14 @@ import GoogleProvider from "next-auth/providers/google";
 import { getUserByGoogleId, createUserFromGoogle } from "@/actions/userActions";
 
 export const authOptions: NextAuthOptions = {
+  callbacks: {
+    session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+      }
+      return session;
+    },
+  },
 	providers: [
 		GoogleProvider({
 			clientId: process.env.GOOGLE_CLIENT_ID!,
