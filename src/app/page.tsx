@@ -12,7 +12,7 @@ export default function Page() {
 	const router = useRouter();
 	const [books, setBooks] = useState<{ id: string; title: string }[]>([]);
 	const { isAuthenticated, isLoading, user } = useAuth();
-
+	console.log({books})
 	useEffect(() => {
 		if (isAuthenticated) {
 			fetch('/api/books')
@@ -72,7 +72,7 @@ export default function Page() {
 						<Card key={book.id} className="p-4">
 							<h3 className="font-medium mb-2">{book.title}</h3>
 							<Button
-								onClick={() => router.push(`/read/${book.id}`)}
+								onClick={() => router.push(`/read/${book.fileKey}`)}
 								variant="outline"
 							>
 								Read

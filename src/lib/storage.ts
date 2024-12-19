@@ -25,6 +25,17 @@ export async function getFileUrl(key: string) {
         Bucket: process.env.DO_SPACES_NAME,
         Key: key,
     });
-    
-    return s3Client.getSignedUrl(command, { expiresIn: 3600 });
+    const response = await s3Client.send(command)
+
+    if (!response.Body) {
+        throw new Error("No response body")
+    }
+
+    const streamBody = response.Body as any;
+    const chunks: Uint8Array = [];
+    for await (const chunk of streamBody) {
+        chunks.push(chunk)
+    }
+
+    return Buffer.concat(chunks);
 }
