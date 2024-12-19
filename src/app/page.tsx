@@ -12,6 +12,15 @@ export default function Page() {
 	const router = useRouter();
 	const [books, setBooks] = useState<{ id: string; title: string }[]>([]);
 	const { isAuthenticated, isLoading, user } = useAuth();
+
+	useEffect(() => {
+		if (isAuthenticated) {
+			fetch('/api/books')
+				.then(res => res.json())
+				.then(data => setBooks(data.books))
+				.catch(err => console.error('Error fetching books:', err));
+		}
+	}, [isAuthenticated]);
 	
 	const handleFileUpload = async (file: File) => {
 		const formData = new FormData();
