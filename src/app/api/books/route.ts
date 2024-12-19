@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 import { db } from "@/db";
 import { uploadFile } from "@/lib/storage";
 import { books } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
    try {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(bytes)
 
         // we generate a file key (which would be the filename like "testing.epub")
-        const fileKey = `${session.user.id}/${Date.now()}-${file.name}`
+        const fileKey = `${session.user.id}-${Date.now()}-${file.name}`
         await uploadFile(fileKey, buffer);
 
         // linking file uploaded to user
@@ -50,4 +51,19 @@ export async function POST(request: NextRequest) {
            status: 500
        })
    }
+}
+
+export async function GET (request: NextRequest) {
+    try {
+       // get the file names and ids from db
+        const session = await getServerSession(authOptions);
+        const booksList = await db.select().from(books).where(eq(books.userId, session!.user.id));
+        return Response.json({
+            books: booksList
+        }) 
+    } catch(err) {
+        return Response.json({
+            error: "Books retrieval failed"
+        })
+    }   
 }
