@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import path from "path";
 import fs from "fs/promises";
-import { getFileUrl } from "@/lib/storage.ts"
+import { getFileUrl } from "@/lib/storage"
 
 export async function GET(
     request: NextRequest,
