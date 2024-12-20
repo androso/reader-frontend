@@ -1,37 +1,42 @@
-import React, { type CSSProperties, type ReactNode, useRef, useState } from 'react'
+import React, {
+  type CSSProperties,
+  type ReactNode,
+  useRef,
+  useState,
+} from "react";
 import {
   type SwipeableProps,
   type SwipeEventData,
   useSwipeable,
-} from 'react-swipeable'
-import { EpubView, type IEpubViewProps } from '../EpubView/EpubView'
-import { type IEpubViewStyle } from "../EpubView/style"
+} from "react-swipeable";
+import { EpubView, type IEpubViewProps } from "../EpubView/EpubView";
+import { type IEpubViewStyle } from "../EpubView/style";
 import {
   ReactReaderStyle as defaultStyles,
   type IReactReaderStyle,
-} from './style'
+} from "./style";
 
-import { type NavItem } from 'epubjs'
+import { type NavItem } from "epubjs";
 
 type SwipeWrapperProps = {
-  children: ReactNode
-  swipeProps: Partial<SwipeableProps>
-}
+  children: ReactNode;
+  swipeProps: Partial<SwipeableProps>;
+};
 
 const SwipeWrapper = ({ children, swipeProps }: SwipeWrapperProps) => {
-  const handlers = useSwipeable(swipeProps)
+  const handlers = useSwipeable(swipeProps);
   return (
-    <div style={{ height: '100%' }} {...handlers}>
+    <div style={{ height: "100%" }} {...handlers}>
       {children}
     </div>
-  )
-}
+  );
+};
 
 type TocItemProps = {
-  data: NavItem
-  setLocation: (value: string) => void
-  styles?: CSSProperties
-}
+  data: NavItem;
+  setLocation: (value: string) => void;
+  styles?: CSSProperties;
+};
 
 const TocItem = ({ data, setLocation, styles }: TocItemProps) => (
   <div>
@@ -51,16 +56,16 @@ const TocItem = ({ data, setLocation, styles }: TocItemProps) => (
       </div>
     )}
   </div>
-)
+);
 
 export type IReactReaderProps = IEpubViewProps & {
-  title?: string
-  showToc?: boolean
-  readerStyles?: IReactReaderStyle
-  epubViewStyles?: IEpubViewStyle
-  swipeable?: boolean
-  isRTL?: boolean
-}
+  title?: string;
+  showToc?: boolean;
+  readerStyles?: IReactReaderStyle;
+  epubViewStyles?: IEpubViewStyle;
+  swipeable?: boolean;
+  isRTL?: boolean;
+};
 
 export const ReactReader = ({
   title,
@@ -74,91 +79,41 @@ export const ReactReader = ({
   tocChanged,
   ...props
 }: IReactReaderProps) => {
-  const [expandedToc, setExpandedToc] = useState(false)
-  const [toc, setToc] = useState<NavItem[]>([])
-  const readerRef = useRef<EpubView>(null)
+  const [expandedToc, setExpandedToc] = useState(false);
+  const [toc, setToc] = useState<NavItem[]>([]);
+  const readerRef = useRef<EpubView>(null);
 
   const toggleToc = () => {
-    setExpandedToc(!expandedToc)
-  }
+    setExpandedToc(!expandedToc);
+  };
 
   const next = () => {
-    const node = readerRef.current
+    const node = readerRef.current;
     if (node && node.nextPage) {
-      node.nextPage()
+      node.nextPage();
     }
-  }
+  };
 
   const prev = () => {
-    const node = readerRef.current
+    const node = readerRef.current;
     if (node && node.prevPage) {
-      node.prevPage()
+      node.prevPage();
     }
-  }
+  };
 
   const handleTocChange = (newToc: NavItem[]) => {
-    setToc(newToc)
+    setToc(newToc);
     if (tocChanged) {
-      tocChanged(newToc)
+      tocChanged(newToc);
     }
-  }
+  };
 
   const handleSetLocation = (loc: string) => {
-    setExpandedToc(false)
+    setExpandedToc(false);
     if (locationChanged) {
-      locationChanged(loc)
+      locationChanged(loc);
     }
-  }
-
-  const renderToc = () => {
-    return (
-      <div>
-        <div style={readerStyles.tocArea}>
-          <div style={readerStyles.toc}>
-            {toc.map((item, i) => (
-              <TocItem
-                data={item}
-                key={i}
-                setLocation={handleSetLocation}
-                styles={readerStyles.tocAreaButton}
-              />
-            ))}
-          </div>
-        </div>
-        {expandedToc && (
-          <div style={readerStyles.tocBackground} onClick={toggleToc} />
-        )}
-      </div>
-    )
-  }
-
-  const renderTocToggle = () => {
-    return (
-      <button
-        style={Object.assign(
-          {},
-          readerStyles.tocButton,
-          expandedToc ? readerStyles.tocButtonExpanded : {}
-        )}
-        onClick={toggleToc}
-      >
-        <span
-          style={Object.assign(
-            {},
-            readerStyles.tocButtonBar,
-            readerStyles.tocButtonBarTop
-          )}
-        />
-        <span
-          style={Object.assign(
-            {},
-            readerStyles.tocButtonBar,
-            readerStyles.tocButtonBottom
-          )}
-        />
-      </button>
-    )
-  }
+  };
 
   return (
     <div style={readerStyles.container}>
@@ -166,20 +121,44 @@ export const ReactReader = ({
         style={Object.assign(
           {},
           readerStyles.readerArea,
-          expandedToc ? readerStyles.containerExpanded : {}
+          expandedToc ? readerStyles.containerExpanded : {},
         )}
       >
-        {showToc && renderTocToggle()}
+        {showToc && (
+          <button
+            style={Object.assign(
+              {},
+              readerStyles.tocButton,
+              expandedToc ? readerStyles.tocButtonExpanded : {},
+            )}
+            onClick={toggleToc}
+          >
+            <span
+              style={Object.assign(
+                {},
+                readerStyles.tocButtonBar,
+                readerStyles.tocButtonBarTop,
+              )}
+            />
+            <span
+              style={Object.assign(
+                {},
+                readerStyles.tocButtonBar,
+                readerStyles.tocButtonBottom,
+              )}
+            />
+          </button>
+        )}
         <div style={readerStyles.titleArea}>{title}</div>
         <SwipeWrapper
           swipeProps={{
             onSwiped: (eventData: SwipeEventData) => {
-              const { dir } = eventData
-              if (dir === 'Left') {
-                isRTL ? prev() : next()
+              const { dir } = eventData;
+              if (dir === "Left") {
+                isRTL ? prev() : next();
               }
-              if (dir === 'Right') {
-                isRTL ? next() : prev()
+              if (dir === "Right") {
+                isRTL ? next() : prev();
               }
             },
             onTouchStartOrOnMouseDown: ({ event }) => event.preventDefault(),
@@ -206,8 +185,38 @@ export const ReactReader = ({
             {swipeable && <div style={readerStyles.swipeWrapper} />}
           </div>
         </SwipeWrapper>
+        <button
+          style={Object.assign({}, readerStyles.arrow, readerStyles.prev)}
+          onClick={() => isRTL ? next() : prev()}
+        >
+          ‹
+        </button>
+        <button
+          style={Object.assign({}, readerStyles.arrow, readerStyles.next)}
+          onClick={() => isRTL ? prev() : next()}
+        >
+          ›
+        </button>
       </div>
-      {showToc && toc && renderToc()}
+      {showToc && (
+        <div>
+          <div style={readerStyles.tocArea}>
+            <div style={readerStyles.toc}>
+              {toc.map((item, i) => (
+                <TocItem
+                  data={item}
+                  key={i}
+                  setLocation={handleSetLocation}
+                  styles={readerStyles.tocAreaButton}
+                />
+              ))}
+            </div>
+          </div>
+          {expandedToc && (
+            <div style={readerStyles.tocBackground} onClick={toggleToc} />
+          )}
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
