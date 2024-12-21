@@ -15,6 +15,7 @@ export default function Page() {
 	const [books, setBooks] = useState<{ id: string; title: string }[]>([]);
 	const { isAuthenticated, isLoading, user } = useAuth();
 	const [hoveredBookId, setHoveredBookId] = useState<string | null>(null);
+	const [isUploading, setIsUploading] = useState(false);
 	
 	useEffect(() => {
 		if (isAuthenticated) {
@@ -29,20 +30,25 @@ export default function Page() {
 	}, [isAuthenticated]);
 	
 	const handleFileUpload = async (file: File) => {
-		const formData = new FormData();
-		formData.append("file", file);
+		setIsUploading(true);
+		try {
+			const formData = new FormData();
+			formData.append("file", file);
 
-		const response = await fetch("/api/books", {
-			method: "POST",
-			body: formData,
-		});
+			const response = await fetch("/api/books", {
+				method: "POST",
+				body: formData,
+			});
 
-		if (!response.ok) {
-			throw new Error("Failed to upload file");
+			if (!response.ok) {
+				throw new Error("Failed to upload file");
+			}
+
+			const data = await response.json();
+			setBooks([...books, { id: data.book.id, title: file.name }]);
+		} finally {
+			setIsUploading(false);
 		}
-
-		const data = await response.json();
-		setBooks([...books, { id: data.id, title: file.name }]);
 	};
 
 	const deleteItem = async (e: any, itemId: string) => {
@@ -79,7 +85,7 @@ export default function Page() {
 		<div className="container mx-auto p-8">
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-3xl font-semibold">Library</h1>
-				<FileUpload onUpload={handleFileUpload} />
+				<FileUpload onUpload={handleFileUpload} isLoading={isUploading} />
 			</div>
 
 			<ScrollArea className="h-[calc(100vh-12rem)]">

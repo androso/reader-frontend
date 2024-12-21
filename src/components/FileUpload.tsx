@@ -1,3 +1,4 @@
+
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
@@ -5,9 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface FileUploadProps {
   onUpload: (file: File) => Promise<void>;
+  isLoading: boolean;
 }
 
-export function FileUpload({ onUpload }: FileUploadProps) {
+export function FileUpload({ onUpload, isLoading }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -51,9 +53,10 @@ export function FileUpload({ onUpload }: FileUploadProps) {
       <Button
         onClick={() => inputRef.current?.click()}
         variant="outline"
+        disabled={isLoading}
       >
         <Upload className="h-4 w-4 mr-2" />
-        Upload EPUB
+        {isLoading ? "Uploading..." : "Upload EPUB"}
       </Button>
     </>
   );
