@@ -4,10 +4,11 @@ import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface FileUploadProps {
-  onUpload: (file: File) => Promise<void>;
+  onUpload: (file: File) => void;
+  isLoading: boolean;
 }
 
-export function FileUpload({ onUpload }: FileUploadProps) {
+export function FileUpload({ onUpload, isLoading }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -24,19 +25,19 @@ export function FileUpload({ onUpload }: FileUploadProps) {
       return;
     }
 
-    try {
-      await onUpload(file);
-      toast({
-        title: "Success",
-        description: "Book uploaded successfully"
-      });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to upload book",
-        variant: "destructive"
-      });
-    }
+    onUpload(file);
+    // try {
+      // toast({
+      //   title: "Success",
+      //   description: "Book uploaded successfully"
+      // });
+    // } catch (err) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Failed to upload book",
+    //     variant: "destructive"
+    //   });
+    // }
   };
 
   return (
@@ -51,9 +52,10 @@ export function FileUpload({ onUpload }: FileUploadProps) {
       <Button
         onClick={() => inputRef.current?.click()}
         variant="outline"
+        disabled={isLoading}
       >
         <Upload className="h-4 w-4 mr-2" />
-        Upload EPUB
+        {isLoading ? "Uploading..." : "Upload EPUB"}
       </Button>
     </>
   );

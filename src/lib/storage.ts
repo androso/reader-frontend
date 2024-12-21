@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectAclCommand, GetObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, PutObjectCommand,  GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
 
 const s3Client = new S3Client({
     endpoint: process.env.DO_SPACES_ENDPOINT,
@@ -38,4 +38,13 @@ export async function getFileUrl(key: string) {
     }
 
     return Buffer.concat(chunks);
+}
+
+export async function deleteFile(key: string) {
+    const command = new DeleteObjectCommand({
+        Bucket: process.env.DO_SPACES_NAME,
+        Key: key,
+    })
+
+    return await s3Client.send(command)
 }
