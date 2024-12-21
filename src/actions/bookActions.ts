@@ -3,7 +3,6 @@ import { db } from "@/db"
 import { books } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { deleteFile } from "@/lib/storage";
-import { revalidatePath } from "next/cache";
 
 export async function deleteBook(bookId: string) {
     const [book] = await db.select().from(books).where(eq(books.id, bookId)).limit(1);
@@ -13,7 +12,6 @@ export async function deleteBook(bookId: string) {
             await deleteFile(book.fileKey);
             
             await db.delete(books).where(eq(books.id, bookId));
-            revalidatePath("/");
             
             return {
                 success: true,
