@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/lib/auth";
+import { Icon } from "@iconify/react";
 
 export default function Page() {
 	const router = useRouter();
 	const [books, setBooks] = useState<{ id: string; title: string }[]>([]);
 	const { isAuthenticated, isLoading, user } = useAuth();
-	console.log({books})
+	const [hoveredBookId, setHoveredBookId] = useState<string | null>(null);
+	
 	useEffect(() => {
 		if (isAuthenticated) {
 			fetch('/api/books')
@@ -69,14 +71,17 @@ export default function Page() {
 			<ScrollArea className="h-[calc(100vh-12rem)]">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 					{books.map((book) => (
-						<Card key={book.id} className="p-4">
-							<h3 className="font-medium mb-2">{book.title}</h3>
-							<Button
-								onClick={() => router.push(`/read/${book.fileKey}`)}
-								variant="outline"
+						<Card
+							key={book.id} 
+							className="relative transition-colors hover:bg-slate-200 p-5 cursor-pointer" 
+							onClick={() => router.push(`/read/${book.fileKey}`)}
+							onMouseEnter = { () => setHoveredBookId(book.id) }
+							onMouseLeave={()  => setHoveredBookId(null)}
 							>
-								Read
-							</Button>
+							<h3 className="font-medium">{book.title}</h3>
+							<div className={`transition-opacity absolute right-4 top-1/2 transform -translate-y-1/2 bg-slate-900 py-2 px-2 rounded-full text-white hover:text-red-400 ${hoveredBookId === book.id ? 'opacity-100' : 'opacity-0'}`}>
+								<Icon icon="solar:archive-bold" width="16" height="16"/>
+							</div>
 						</Card>
 					))}
 				</div>
