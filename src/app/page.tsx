@@ -12,22 +12,14 @@ import toast from "react-hot-toast";
 
 export default function Page() {
 	const router = useRouter();
-	const [books, setBooks] = useState<{ id: string; title: string, fileKey: string }[]>([]);
 	const { isAuthenticated, isLoading, user } = useAuth();
 	const [hoveredBookId, setHoveredBookId] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
 	
-	useEffect(() => {
-		if (isAuthenticated) {
-			fetch('/api/books')
-				.then(res => res.json())
-				.then(data => {
-					console.log({data})
-					setBooks(data.books)				
-				})
-				.catch(err => console.error('Error fetching books:', err));
-		}
-	}, [isAuthenticated]);
+	const { data: booksData } = useQuery({
+		queryKey: ['/api/books'],
+		enabled: isAuthenticated,
+	});
 	
 	const handleFileUpload = async (file: File) => {
 		setIsUploading(true);
@@ -45,7 +37,7 @@ export default function Page() {
 			}
 
 			const data = await response.json();
-			setBooks([...books, { id: data.book.id, title: file.name, fileKey: data.book.fileKey }]);
+			queryClient.invalidateQueries({ queryKey: ['/api/books'] });
 		} finally {
 			setIsUploading(false);
 			toast.success("File uploaded successfully")
@@ -91,7 +83,7 @@ export default function Page() {
 
 			<ScrollArea className="h-[calc(100vh-12rem)]">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{books.map((book) => (
+					{booksData?.books?.map((book) => (
 						<Card
 							key={book.id} 
 							className="relative transition-colors hover:bg-slate-200 p-5 cursor-pointer" 
