@@ -53,16 +53,21 @@ export default function Page() {
 	};
 	
 	const { mutate: deleteItem } = useMutation({
-		mutationFn: async (itemId: string) => {
-			return await deleteBook(itemId);
+		mutationFn: async (e: any, itemId: string) => {
+			e.stopPropagation()
+			const response = await deleteBook(itemId);
+			if (!response.success) {
+				throw new Error(response.message);
+			}
+			
+			return response;
 		},
 		onSuccess: (result) => {
-			if (result.success) {
-				toast.success(result.message);
-			} else {
-				toast.error(result.message);
-			}
+			toast.success(result.message);
 		},
+		onError: (err) => {
+			toast.error(err.message);	
+		}
 	});
 
 	useEffect(() => {
