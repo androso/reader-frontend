@@ -53,8 +53,7 @@ export default function Page() {
 	};
 	
 	const { mutate: deleteItem } = useMutation({
-		mutationFn: async (e: any, itemId: string) => {
-			e.stopPropagation()
+		mutationFn: async (itemId: string) => {
 			const response = await deleteBook(itemId);
 			if (!response.success) {
 				throw new Error(response.message);
@@ -63,6 +62,7 @@ export default function Page() {
 			return response;
 		},
 		onSuccess: (result) => {
+			queryClient.invalidateQueries({ queryKey: ["/api/books"]})
 			toast.success(result.message);
 		},
 		onError: (err) => {
@@ -112,7 +112,10 @@ export default function Page() {
 							<h3 className="font-medium">{book.title}</h3>
 							<div
 								className={`transition-opacity absolute right-4 top-1/2 transform -translate-y-1/2 bg-slate-900 py-2 px-2 rounded-full text-white hover:text-red-400 ${hoveredBookId === book.id ? "opacity-100" : "opacity-0"}`}
-								onClick={(e) => deleteItem(e, book.id)}
+								onClick={(e) => {
+									e.stopPropagation();
+									deleteItem(book.id)
+								}}
 							>
 								<Icon
 									icon="solar:archive-bold"
