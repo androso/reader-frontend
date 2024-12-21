@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/FileUpload";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/lib/auth";
 import { Icon } from "@iconify/react";
+import { deleteBook } from "@/actions/bookActions";
+import toast from "react-hot-toast";
 
 export default function Page() {
 	const router = useRouter();
@@ -19,7 +20,10 @@ export default function Page() {
 		if (isAuthenticated) {
 			fetch('/api/books')
 				.then(res => res.json())
-				.then(data => setBooks(data.books))
+				.then(data => {
+					console.log({data})
+					setBooks(data.books)				
+				})
 				.catch(err => console.error('Error fetching books:', err));
 		}
 	}, [isAuthenticated]);
@@ -41,6 +45,16 @@ export default function Page() {
 		setBooks([...books, { id: data.id, title: file.name }]);
 	};
 
+	const deleteItem = async (e: any, itemId: string) => {
+		e.stopPropagation();
+		const result = await deleteBook(itemId);
+		if (result.success) {
+			toast.success(result.message);
+		} else {
+			toast.error(result.message)
+		}
+	}
+	
 	useEffect(() => {
 		if (isLoading == false) {
 			if (isAuthenticated == false) {
@@ -79,7 +93,10 @@ export default function Page() {
 							onMouseLeave={()  => setHoveredBookId(null)}
 							>
 							<h3 className="font-medium">{book.title}</h3>
-							<div className={`transition-opacity absolute right-4 top-1/2 transform -translate-y-1/2 bg-slate-900 py-2 px-2 rounded-full text-white hover:text-red-400 ${hoveredBookId === book.id ? 'opacity-100' : 'opacity-0'}`}>
+							<div 
+								className={`transition-opacity absolute right-4 top-1/2 transform -translate-y-1/2 bg-slate-900 py-2 px-2 rounded-full text-white hover:text-red-400 ${hoveredBookId === book.id ? 'opacity-100' : 'opacity-0'}`}
+								onClick={(e) => deleteItem(e, book.id)}	
+								>
 								<Icon icon="solar:archive-bold" width="16" height="16"/>
 							</div>
 						</Card>
