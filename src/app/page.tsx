@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 
 export default function Page() {
 	const router = useRouter();
-	const [books, setBooks] = useState<{ id: string; title: string }[]>([]);
+	const [books, setBooks] = useState<{ id: string; title: string, fileKey: string }[]>([]);
 	const { isAuthenticated, isLoading, user } = useAuth();
 	const [hoveredBookId, setHoveredBookId] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
@@ -45,9 +45,10 @@ export default function Page() {
 			}
 
 			const data = await response.json();
-			setBooks([...books, { id: data.book.id, title: file.name }]);
+			setBooks([...books, { id: data.book.id, title: file.name, fileKey: data.book.fileKey }]);
 		} finally {
 			setIsUploading(false);
+			toast.success("File uploaded successfully")
 		}
 	};
 
