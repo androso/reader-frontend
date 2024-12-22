@@ -113,6 +113,8 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
         const rendition = this.book.renderTo(node, {
           width: "100%",
           height: "100%",
+          flow: "scrolled-doc",
+          manager: "continuous",
           ...epubOptions,
         });
         rendition.themes.register("default", {

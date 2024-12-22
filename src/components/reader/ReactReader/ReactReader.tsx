@@ -186,13 +186,13 @@ export const ReactReader = ({
           </div>
         </SwipeWrapper>
         <button
-          style={Object.assign({}, readerStyles.arrow, readerStyles.prev)}
+          style={Object.assign({}, readerStyles.arrow, readerStyles.prev, {transform: 'rotate(90deg)', top: '20%'})}
           onClick={() => isRTL ? next() : prev()}
         >
           ‹
         </button>
         <button
-          style={Object.assign({}, readerStyles.arrow, readerStyles.next)}
+          style={Object.assign({}, readerStyles.arrow, readerStyles.next, {transform: 'rotate(90deg)', top: '80%'})}
           onClick={() => isRTL ? prev() : next()}
         >
           ›

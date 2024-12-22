@@ -64,10 +64,12 @@ export const ReactReaderStyle: IReactReaderStyle = {
     zIndex: 200,
   },
   prev: {
-    left: 1,
+    left: '50%',
+    marginLeft: -32,
   },
   next: {
-    right: 1,
+    left: '50%',
+    marginLeft: -32,
   },
   arrow: {
     outline: 'none',
