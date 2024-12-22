@@ -157,7 +157,7 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
   };
 
   renderBook() {
-    const { epubViewStyles = defaultStyles } = this.props;
+    const epubViewStyles = { ...defaultStyles, ...this.props.epubViewStyles };
     return <div ref={this.viewerRef} style={epubViewStyles.view} id="huh" />;
   }
 
@@ -172,7 +172,8 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
 
   render() {
     const { isLoaded } = this.state;
-    const { loadingView = null, epubViewStyles = defaultStyles } = this.props;
+    const { loadingView = null } = this.props;
+    const epubViewStyles = { ...defaultStyles, ...this.props.epubViewStyles }
     return (
       <div style={epubViewStyles.viewHolder}>
         {(isLoaded && this.renderBook()) || loadingView}
