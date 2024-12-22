@@ -26,18 +26,6 @@ export function FileUpload({ onUpload, isLoading }: FileUploadProps) {
     }
 
     onUpload(file);
-    // try {
-      // toast({
-      //   title: "Success",
-      //   description: "Book uploaded successfully"
-      // });
-    // } catch (err) {
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to upload book",
-    //     variant: "destructive"
-    //   });
-    // }
   };
 
   return (
