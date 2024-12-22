@@ -22,7 +22,7 @@ export function BookViewer({ bookId }: BookViewerProps) {
   return (
     <ScrollArea className="flex-1 bg-background [&_.arrow]:hidden">
       <div
-        className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-2xl"
+        className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-3xl"
         style={{ height: "calc(100vh - 4rem)", position: "relative" }}
       >
         {showTooltip && (
