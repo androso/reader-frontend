@@ -87,19 +87,19 @@ export const ReactReader = ({
     setExpandedToc(!expandedToc);
   };
 
-  const next = () => {
-    const node = readerRef.current;
-    if (node && node.nextPage) {
-      node.nextPage();
-    }
-  };
+  // const next = () => {
+  //   const node = readerRef.current;
+  //   if (node && node.nextPage) {
+  //     node.nextPage();
+  //   }
+  // };
 
-  const prev = () => {
-    const node = readerRef.current;
-    if (node && node.prevPage) {
-      node.prevPage();
-    }
-  };
+  // const prev = () => {
+  //   const node = readerRef.current;
+  //   if (node && node.prevPage) {
+  //     node.prevPage();
+  //   }
+  // };
 
   const handleTocChange = (newToc: NavItem[]) => {
     setToc(newToc);
@@ -185,7 +185,7 @@ export const ReactReader = ({
             {swipeable && <div style={readerStyles.swipeWrapper} />}
           </div>
         </SwipeWrapper>
-        <button
+        {/* <button
           style={Object.assign({}, readerStyles.arrow, readerStyles.prev, {transform: 'rotate(90deg)', top: '20%'})}
           onClick={() => isRTL ? next() : prev()}
         >
@@ -196,7 +196,7 @@ export const ReactReader = ({
           onClick={() => isRTL ? prev() : next()}
         >
           ›
-        </button>
+        </button> */}
       </div>
       {showToc && (
         <div>

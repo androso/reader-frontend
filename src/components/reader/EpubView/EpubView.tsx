@@ -113,7 +113,7 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
         const rendition = this.book.renderTo(node, {
           width: "100%",
           height: "100%",
-          flow: "scrolled-doc",
+          flow: "scrolled",
           manager: "continuous",
           ...epubOptions,
         });
@@ -175,12 +175,12 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
   }
 
   handleKeyPress = (event: KeyboardEvent) => {
-    if (event.key === "ArrowRight" && this.nextPage) {
-      this.nextPage();
-    }
-    if (event.key === "ArrowLeft" && this.prevPage) {
-      this.prevPage();
-    }
+    // if (event.key === "ArrowRight" && this.nextPage) {
+    //   this.nextPage();
+    // }
+    // if (event.key === "ArrowLeft" && this.prevPage) {
+    //   this.prevPage();
+    // }
   };
 
   render() {
