@@ -115,6 +115,18 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
           height: "100%",
           ...epubOptions,
         });
+        rendition.themes.register("default", {
+          "*, *::before, *::after": {
+            "font-family": "'Literata', serif",
+            "font-size": "19px",
+            "line-height": "1.6",
+            "-webkit-font-smoothing": "antialiased",
+          },
+          "p": {
+            "margin": "1em 0",
+          }
+        });
+        rendition.themes.select("default");
         this.rendition = rendition;
         this.prevPage = () => {
           rendition.prev();
