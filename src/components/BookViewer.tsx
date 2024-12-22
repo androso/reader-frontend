@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ReactReader } from "@/components/reader/ReactReader/ReactReader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import useSelectionTooltip from "@/hooks/useSelectionTooltip";
 import TextSelectionTooltip from "./ui/TextSelectionTooltip";
-
+import type { Rendition, Contents } from "epubjs";
 interface BookViewerProps {
   bookId: string;
 }
@@ -17,18 +17,18 @@ export function BookViewer({ bookId }: BookViewerProps) {
       minDragDistance: 5,
       tooltipOffset: 0,
     });
+  const renditionRef = useRef<Rendition | null>(null);
+
   return (
     <ScrollArea className="flex-1 bg-background [&_.arrow]:hidden">
       <div
         className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-2xl"
         style={{ height: "calc(100vh - 4rem)", position: "relative" }}
       >
-        { showTooltip && (
-        <TextSelectionTooltip
-          position={tooltipPosition}
-        >
-          test
-        </TextSelectionTooltip>
+        {showTooltip && (
+          <TextSelectionTooltip position={tooltipPosition}>
+            test
+          </TextSelectionTooltip>
         )}
 
         <ReactReader
@@ -38,6 +38,24 @@ export function BookViewer({ bookId }: BookViewerProps) {
           showToc={true}
           loadingView={<div className="p-4">Loading EPUB file...</div>}
           getRendition={(rendition) => {
+            renditionRef.current = rendition;
+            rendition.hooks.content.register((contents: Contents) => {
+              const document = contents.window.document;
+              if (document) {
+                const css = `
+                @font-face {
+                  font-family: "literata";
+                  font-weight: 200 900;
+                  src: url("/fonts/literata-variable.ttf") format("truetype-variations");
+                }
+                `;
+                const style = document.createElement("style");
+                style.appendChild(document.createTextNode(css));
+                document.head.appendChild(style);
+                rendition.themes.override("font-family", "literata")
+              }
+            });
+
             rendition.on("started", () => {
               console.log("EPUB started loading");
             });
@@ -47,7 +65,7 @@ export function BookViewer({ bookId }: BookViewerProps) {
             rendition.on("rendered", () => {
               console.log("EPUB content rendered");
               const contents = rendition.getContents();
-              
+
               if (contents) {
                 const content = contents[0] as any;
                 content.document.addEventListener("mousedown", (e) => {
