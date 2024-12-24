@@ -25,14 +25,14 @@ export function BookViewer({ bookId }: BookViewerProps) {
     <ScrollArea className="flex-1 bg-background [&_.arrow]:hidden">
       <div
         className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-3xl"
-        style={{ height: "calc(100vh - 4rem)", position: "relative" }}
+        style={{ height: "100%", position: "relative" }}
       >
+        {/* TODO: FIX THIS  */}
         {showTooltip && (
           <TextSelectionTooltip position={tooltipPosition}>
             test
           </TextSelectionTooltip>
         )}
-
         <ReactReader
           url={`/api/books/${bookId}`}
           location={location}
