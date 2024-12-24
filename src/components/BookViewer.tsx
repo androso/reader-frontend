@@ -24,12 +24,10 @@ export function BookViewer({ bookId }: BookViewerProps) {
   const renditionRef = useRef<Rendition | null>(null);
 
   return (
-    <ScrollArea className="flex-1 bg-background [&_.arrow]:hidden">
-      <div
-        className="min-h-[calc(100vh-4rem)] w-full mx-auto max-w-3xl"
+      <div 
+        className="w-[49%] max-w-[669px]  h-full"
         style={{ height: "100%", position: "relative" }}
       >
-        {/* TODO: FIX THIS  */}
         {showTooltip && (
           <TextSelectionTooltip position={tooltipPosition}>
             test
@@ -37,7 +35,7 @@ export function BookViewer({ bookId }: BookViewerProps) {
         )}
         <ReactReader
           url={`/api/books/${bookId}`}
-          location={location}
+          location={location} 
           locationChanged={(loc: string | number) => setLocation(loc)}
           showToc={true}
           loadingView={<div className="p-4">Loading EPUB file...</div>}
@@ -83,6 +81,5 @@ export function BookViewer({ bookId }: BookViewerProps) {
           }}
         />
       </div>
-    </ScrollArea>
   );
 }

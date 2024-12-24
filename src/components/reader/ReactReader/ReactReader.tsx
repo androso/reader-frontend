@@ -102,7 +102,7 @@ export const ReactReader = ({
   };
   
   return (
-    <div style={readerStyles.container}>
+    <div style={readerStyles.container} className="rounded-lg">
       <div
         style={Object.assign(
           {},
