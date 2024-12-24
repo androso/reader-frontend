@@ -6,7 +6,6 @@ import React, {
 } from "react";
 import {
   type SwipeableProps,
-  type SwipeEventData,
   useSwipeable,
 } from "react-swipeable";
 import { EpubView, type IEpubViewProps } from "../EpubView/EpubView";
@@ -86,20 +85,6 @@ export const ReactReader = ({
     setExpandedToc(!expandedToc);
   };
 
-  // const next = () => {
-  //   const node = readerRef.current;
-  //   if (node && node.nextPage) {
-  //     node.nextPage();
-  //   }
-  // };
-
-  // const prev = () => {
-  //   const node = readerRef.current;
-  //   if (node && node.prevPage) {
-  //     node.prevPage();
-  //   }
-  // };
-
   const handleTocChange = (newToc: NavItem[]) => {
     // Filter out the first item (cover)
     const filteredToc = newToc.slice(1);
@@ -153,15 +138,6 @@ export const ReactReader = ({
         <div style={readerStyles.titleArea}>{title}</div>
         <SwipeWrapper
           swipeProps={{
-            onSwiped: (eventData: SwipeEventData) => {
-              // const { dir } = eventData;
-              // if (dir === "Left") {
-              //   isRTL ? prev() : next();
-              // }
-              // if (dir === "Right") {
-              //   isRTL ? next() : prev();
-              // }
-            },
             onTouchStartOrOnMouseDown: ({ event }) => event.preventDefault(),
             touchEventOptions: { passive: false },
             preventScrollOnSwipe: true,
@@ -186,18 +162,6 @@ export const ReactReader = ({
             {swipeable && <div style={readerStyles.swipeWrapper} />}
           </div>
         </SwipeWrapper>
-        {/* <button
-          style={Object.assign({}, readerStyles.arrow, readerStyles.prev, {transform: 'rotate(90deg)', top: '20%'})}
-          onClick={() => isRTL ? next() : prev()}
-        >
-          ‹
-        </button>
-        <button
-          style={Object.assign({}, readerStyles.arrow, readerStyles.next, {transform: 'rotate(90deg)', top: '80%'})}
-          onClick={() => isRTL ? prev() : next()}
-        >
-          ›
-        </button> */}
       </div>
       {showToc && (
         <div>

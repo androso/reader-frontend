@@ -11,13 +11,15 @@ interface BookViewerProps {
 
 export function BookViewer({ bookId }: BookViewerProps) {
   // location helps keep redirect to a new section
-  const [location, setLocation] = useState<string | number>(0);
+  // we set it to 1 in order to avoid showing the book cover
+  const [location, setLocation] = useState<string | number>(1);
   const { toast } = useToast();
   const { handleMouseDown, handleSelection, showTooltip, tooltipPosition } =
     useSelectionTooltip({
       minDragDistance: 5,
       tooltipOffset: 0,
     });
+  
   // ref to the rendition element from epubjs
   const renditionRef = useRef<Rendition | null>(null);
 
@@ -77,14 +79,6 @@ export function BookViewer({ bookId }: BookViewerProps) {
                   handleSelection(e, content.document);
                 });
               }
-            });
-          }}
-          onError={(error) => {
-            console.error("EPUB loading error:", error);
-            toast({
-              title: "Error",
-              description: "Failed to load the EPUB file. Please try again.",
-              variant: "destructive",
             });
           }}
         />

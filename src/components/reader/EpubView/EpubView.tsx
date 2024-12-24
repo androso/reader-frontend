@@ -133,15 +133,10 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
         // Skip cover by starting from second TOC item or falling back to spine
         if (typeof location === "string" || typeof location === "number") {
           rendition.display(location + "");
-        } else if (toc.length > 1) {
-          rendition.display(toc[1].href);
+        } else if (toc.length > 0 && toc[0].href) {
+          rendition.display(toc[0].href);
         } else {
-          const spine = this.book.spine;
-          if (spine && spine.items && spine.items.length > 1) {
-            rendition.display(spine.items[1].href);
-          } else {
-            rendition.display();
-          }
+          rendition.display()
         }
       }
     }
