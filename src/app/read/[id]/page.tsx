@@ -1,7 +1,6 @@
 "use client";
 
 import { BookViewer } from "@/components/BookViewer";
-import { ChatInput } from "@/components/ChatInput";
 import { useParams } from "next/navigation";
 
 export default function Reader() {
@@ -10,7 +9,6 @@ export default function Reader() {
 	return (
 		<div className="h-screen w-screen flex flex-col">
 			<BookViewer bookId={bookId ?? ""} />
-			<ChatInput />
 		</div>
 	);
 }

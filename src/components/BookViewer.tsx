@@ -10,6 +10,7 @@ interface BookViewerProps {
 }
 
 export function BookViewer({ bookId }: BookViewerProps) {
+  // location helps keep redirect to a new section
   const [location, setLocation] = useState<string | number>(0);
   const { toast } = useToast();
   const { handleMouseDown, handleSelection, showTooltip, tooltipPosition } =
@@ -17,6 +18,7 @@ export function BookViewer({ bookId }: BookViewerProps) {
       minDragDistance: 5,
       tooltipOffset: 0,
     });
+  // ref to the rendition element from epubjs
   const renditionRef = useRef<Rendition | null>(null);
 
   return (
