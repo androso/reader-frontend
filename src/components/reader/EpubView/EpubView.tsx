@@ -61,7 +61,8 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
     if (this.book) {
       this.book.destroy();
     }
-    this.book = Epub(url, epubInitOptions);
+    // this.book = Epub(url, epubInitOptions);
+    this.book = Epub(url);
     this.book.loaded.navigation.then(({ toc }) => {
       this.setState(
         {
@@ -110,13 +111,19 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
     if (this.viewerRef.current) {
       const node = this.viewerRef.current;
       if (this.book) {
+        // const rendition = this.book.renderTo(node, {
+        //   width: "100%",
+        //   height: "100%",
+        //   flow: "scrolled",
+        //   manager: "continuous",
+        //   ...epubOptions,
+        // });
         const rendition = this.book.renderTo(node, {
-          width: "100%",
-          height: "100%",
-          flow: "scrolled",
           manager: "continuous",
-          ...epubOptions,
-        });
+          flow: "scrolled",
+          width: "100%",
+          height: "100%"
+        })
         rendition.themes.register("default", {
           "*, *::before, *::after": {
             "font-size": "18px",
@@ -129,13 +136,13 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
         });
         rendition.themes.select("default");
         this.rendition = rendition;
-        this.prevPage = () => {
-          rendition.prev();
-        };
-        this.nextPage = () => {
-          rendition.next();
-        };
-        this.registerEvents();
+        // this.prevPage = () => {
+        //   rendition.prev();
+        // };
+        // this.nextPage = () => {
+        //   rendition.next();
+        // };
+        // this.registerEvents();
         getRendition && getRendition(rendition);
 
         if (typeof location === "string" || typeof location === "number") {
@@ -150,14 +157,14 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
   }
 
   registerEvents() {
-    const { handleKeyPress, handleTextSelected } = this.props;
-    if (this.rendition) {
-      this.rendition.on("locationChanged", this.onLocationChange);
-      this.rendition.on("keyup", handleKeyPress || this.handleKeyPress);
-      if (handleTextSelected) {
-        this.rendition.on("selected", handleTextSelected);
-      }
-    }
+    // const { handleKeyPress, handleTextSelected } = this.props;
+    // if (this.rendition) {
+    //   this.rendition.on("locationChanged", this.onLocationChange);
+    //   this.rendition.on("keyup", handleKeyPress || this.handleKeyPress);
+    //   if (handleTextSelected) {
+    //     this.rendition.on("selected", handleTextSelected);
+      // }
+    // }
   }
 
   onLocationChange = (loc: Location) => {
