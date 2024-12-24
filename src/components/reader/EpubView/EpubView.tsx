@@ -61,7 +61,6 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
     if (this.book) {
       this.book.destroy();
     }
-    // this.book = Epub(url, epubInitOptions);
     this.book = Epub(url);
     this.book.loaded.navigation.then(({ toc }) => {
       this.setState(
@@ -111,13 +110,6 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
     if (this.viewerRef.current) {
       const node = this.viewerRef.current;
       if (this.book) {
-        // const rendition = this.book.renderTo(node, {
-        //   width: "100%",
-        //   height: "100%",
-        //   flow: "scrolled",
-        //   manager: "continuous",
-        //   ...epubOptions,
-        // });
         const rendition = this.book.renderTo(node, {
           manager: "continuous",
           flow: "scrolled",
@@ -136,35 +128,26 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
         });
         rendition.themes.select("default");
         this.rendition = rendition;
-        // this.prevPage = () => {
-        //   rendition.prev();
-        // };
-        // this.nextPage = () => {
-        //   rendition.next();
-        // };
-        // this.registerEvents();
         getRendition && getRendition(rendition);
 
+        // Skip cover by starting from second TOC item or falling back to spine
         if (typeof location === "string" || typeof location === "number") {
           rendition.display(location + "");
-        } else if (toc.length > 0 && toc[0].href) {
-          rendition.display(toc[0].href);
+        } else if (toc.length > 1) {
+          rendition.display(toc[1].href);
         } else {
-          rendition.display();
+          const spine = this.book.spine;
+          if (spine && spine.items && spine.items.length > 1) {
+            rendition.display(spine.items[1].href);
+          } else {
+            rendition.display();
+          }
         }
       }
     }
   }
 
   registerEvents() {
-    // const { handleKeyPress, handleTextSelected } = this.props;
-    // if (this.rendition) {
-    //   this.rendition.on("locationChanged", this.onLocationChange);
-    //   this.rendition.on("keyup", handleKeyPress || this.handleKeyPress);
-    //   if (handleTextSelected) {
-    //     this.rendition.on("selected", handleTextSelected);
-      // }
-    // }
   }
 
   onLocationChange = (loc: Location) => {
@@ -182,12 +165,6 @@ export class EpubView extends Component<IEpubViewProps, IEpubViewState> {
   }
 
   handleKeyPress = (event: KeyboardEvent) => {
-    // if (event.key === "ArrowRight" && this.nextPage) {
-    //   this.nextPage();
-    // }
-    // if (event.key === "ArrowLeft" && this.prevPage) {
-    //   this.prevPage();
-    // }
   };
 
   render() {

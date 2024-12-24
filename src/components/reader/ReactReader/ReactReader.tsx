@@ -101,9 +101,11 @@ export const ReactReader = ({
   // };
 
   const handleTocChange = (newToc: NavItem[]) => {
-    setToc(newToc);
+    // Filter out the first item (cover)
+    const filteredToc = newToc.slice(1);
+    setToc(filteredToc);
     if (tocChanged) {
-      tocChanged(newToc);
+      tocChanged(filteredToc);
     }
   };
 
