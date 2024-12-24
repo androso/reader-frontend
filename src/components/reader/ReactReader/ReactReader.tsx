@@ -82,7 +82,6 @@ export const ReactReader = ({
   const [expandedToc, setExpandedToc] = useState(false);
   const [toc, setToc] = useState<NavItem[]>([]);
   const readerRef = useRef<EpubView>(null);
-
   const toggleToc = () => {
     setExpandedToc(!expandedToc);
   };
@@ -114,7 +113,7 @@ export const ReactReader = ({
       locationChanged(loc);
     }
   };
-
+  
   return (
     <div style={readerStyles.container}>
       <div
@@ -153,13 +152,13 @@ export const ReactReader = ({
         <SwipeWrapper
           swipeProps={{
             onSwiped: (eventData: SwipeEventData) => {
-              const { dir } = eventData;
-              if (dir === "Left") {
-                isRTL ? prev() : next();
-              }
-              if (dir === "Right") {
-                isRTL ? next() : prev();
-              }
+              // const { dir } = eventData;
+              // if (dir === "Left") {
+              //   isRTL ? prev() : next();
+              // }
+              // if (dir === "Right") {
+              //   isRTL ? next() : prev();
+              // }
             },
             onTouchStartOrOnMouseDown: ({ event }) => event.preventDefault(),
             touchEventOptions: { passive: false },
