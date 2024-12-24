@@ -1,13 +1,7 @@
 "use client";
 
 import { BookViewer } from "@/components/BookViewer";
-import { ReactReader } from "@/components/reader/ReactReader/ReactReader";
-import TextSelectionTooltip from "@/components/ui/TextSelectionTooltip";
-import { useToast } from "@/hooks/use-toast";
-import useSelectionTooltip from "@/hooks/useSelectionTooltip";
-import { Rendition } from "epubjs";
 import { useParams } from "next/navigation";
-import { useRef, useState } from "react";
 import { useWindowSize } from "@/hooks/useWindowSize";
 
 export default function Reader() {
@@ -19,9 +13,12 @@ export default function Reader() {
 		return (
 			<div className="h-screen w-screen bg-[#d7d7d7] flex items-center justify-center p-4">
 				<div className="max-w-md text-center bg-white p-6 rounded-lg shadow-lg">
-					<h2 className="text-xl font-semibold mb-4">Screen Size Not Supported</h2>
+					<h2 className="text-xl font-semibold mb-4">
+						Screen Size Not Supported
+					</h2>
 					<p className="text-gray-600">
-						Please use a device with a larger screen (minimum 1080px width) or download our mobile app for the best reading experience.
+						Please use a device with a larger screen (minimum 1080px width) or
+						download our mobile app for the best reading experience.
 					</p>
 				</div>
 			</div>
