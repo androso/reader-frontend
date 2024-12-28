@@ -1,6 +1,8 @@
+
 "use client";
 
 import { BookViewer } from "@/components/BookViewer";
+import { ChatInterface } from "@/components/reader/ChatInterface";
 import { useParams } from "next/navigation";
 import { useWindowSize } from "@/hooks/useWindowSize";
 
@@ -27,8 +29,10 @@ export default function Reader() {
 
 	return (
 		<div className="h-screen w-screen bg-red bg-[#d7d7d7] flex items-center justify-center">
-			<div className="h-[93%] w-[93vw] flex justify-center items-center ">
-				<div className="w-[48%] h-full rounded-lg bg-[#353B58] mr-5">text</div>
+			<div className="h-[93%] w-[93vw] flex justify-center items-center">
+				<div className="w-[48%] h-full rounded-lg bg-white mr-5 overflow-hidden">
+					<ChatInterface />
+				</div>
 				<BookViewer bookId={bookId ?? ""} />
 			</div>
 		</div>
