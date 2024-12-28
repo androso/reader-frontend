@@ -1,6 +1,6 @@
 
 import OpenAI from 'openai';
-import { StreamingTextResponse, experimental_StreamData } from 'ai';
+import { StreamingTextResponse } from 'ai';
  
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,6 +15,5 @@ export async function POST(req: Request) {
     messages,
   });
  
-  const stream = experimental_StreamData(response);
-  return new StreamingTextResponse(stream);
+  return new StreamingTextResponse(response.stream());
 }
