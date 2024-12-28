@@ -9,7 +9,7 @@ export function ChatInterface() {
   const { messages, input, handleInputChange, handleSubmit } = useChat({
     api: "/api/chat",
   });
-
+  console.log({messages})
   return (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 p-4">
