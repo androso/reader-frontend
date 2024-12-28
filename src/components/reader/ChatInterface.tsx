@@ -1,4 +1,4 @@
-
+"use client"
 import { useChat } from "ai/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,8 @@ import { SendHorizontal } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ChatInterface() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    api: "/api/chat",
-  });
-  console.log({messages})
+  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  
   return (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 p-4">
