@@ -82,13 +82,19 @@ const processEpub3Nav = (navElement: Element): TocEntry[] => {
 
 const processEpub2Ncx = (navPoints: HTMLCollectionOf<Element>): TocEntry[] => {
 	const entries: TocEntry[] = [];
+	const processedHashes = new Set<string>();
+
 	const processNavPoints = (point: Element, level: number) => {
-		entries.push(processNavPoint(point, level));
+		const id = point.getAttribute("id") || "";
+		const playOrder = point.getAttribute("playOrder") || "";
+		const hash = `${id}-${playOrder}`;
 
-		const childNavPoints = Array.from(point.children).filter(
-			(child) => child.tagName === "navPoint"
-		);
+		if (!processedHashes.has(hash)) {
+			processedHashes.add(hash);
+			entries.push(processNavPoint(point, level));
+		}
 
+		const childNavPoints = point.querySelectorAll(":scope > navPoint");
 		childNavPoints.forEach((child) => {
 			processNavPoints(child, level + 1);
 		});
