@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
+// import { EpubContent } from "./EpubUploader";
 import { type EpubContent } from "@/types/EpubReader";
 
 interface SidebarProps {
@@ -7,142 +8,120 @@ interface SidebarProps {
 	onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ epubContent, isOpen, onClose }) => {
-	const [chapterTitles, setChapterTitles] = useState<Record<string, string>>(
-		{}
-	);
-	const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+const Sidebar: React.FC<SidebarProps> = memo(
+	({ epubContent, isOpen, onClose }) => {
+		const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-	useEffect(() => {
-		const titles: Record<string, string> = {};
-		if (epubContent.toc.length > 0) {
-			epubContent.toc.forEach((entry) => {
-				if (entry.id) {
-					titles[entry.id] = entry.title;
+		const hasChildren = (currentIndex: number) => {
+			const currentEntry = epubContent.toc[currentIndex];
+			return epubContent.toc.some(
+				(entry, i) =>
+					i > currentIndex &&
+					entry.level > currentEntry.level &&
+					!epubContent.toc
+						.slice(currentIndex + 1, i)
+						.some((e) => e.level <= currentEntry.level)
+			);
+		};
+
+		const handleToggle = (index: number) => {
+			setExpandedItems((prev) => {
+				const next = new Set(prev);
+				if (next.has(index.toString())) {
+					next.delete(index.toString());
+				} else {
+					next.add(index.toString());
 				}
+				return next;
 			});
-		} else {
-			epubContent.spine.forEach((id) => {
-				const item = epubContent.manifest[id];
-				if (item) {
-					titles[id] =
-						item.href
-							.split("/")
-							.pop()
-							?.replace(/\.x?html$/, "") || `Chapter ${id}`;
-				}
-			});
-		}
-		setChapterTitles(titles);
-	}, [epubContent]);
+		};
 
-	const hasChildren = (currentIndex: number) => {
-		const currentEntry = epubContent.toc[currentIndex];
-		// Look ahead for any entries that belong to this entry
-		for (let i = currentIndex + 1; i < epubContent.toc.length; i++) {
-			const nextEntry = epubContent.toc[i];
-			// Stop if we hit another entry at the same or higher level
-			if (nextEntry.level <= currentEntry.level) {
-				break;
-			}
-			// Found a child entry
-			return true;
-		}
-		return false;
-	};
+		const renderTocItem = (
+			entry: (typeof epubContent.toc)[0],
+			index: number
+		) => {
+			if (!entry) return null;
 
-	const handleToggle = (index: number) => {
-		const newExpandedItems = new Set(expandedItems);
-		if (expandedItems.has(index.toString())) {
-			newExpandedItems.delete(index.toString());
-		} else {
-			newExpandedItems.add(index.toString());
-		}
-		setExpandedItems(newExpandedItems);
-	};
+			const isExpanded = expandedItems.has(index.toString());
+			const hasChildrenItems = hasChildren(index);
+			const isVisible =
+				entry.level === 0 ||
+				epubContent.toc
+					.slice(0, index)
+					.some(
+						(prev, i) =>
+							prev.level < entry.level &&
+							expandedItems.has(i.toString()) &&
+							!epubContent.toc
+								.slice(i + 1, index)
+								.some((item) => item.level <= prev.level)
+					);
 
-	const renderTocItem = (entry: (typeof epubContent.toc)[0], index: number) => {
-		const isExpanded = expandedItems.has(index.toString());
-		const hasChildrenItems = hasChildren(index);
-		const isVisible =
-			entry.level === 0 ||
-			epubContent.toc
-				.slice(0, index)
-				.some(
-					(prev, i) =>
-						prev.level < entry.level &&
-						expandedItems.has(i.toString()) &&
-						!epubContent.toc
-							.slice(i + 1, index)
-							.some((item) => item.level <= prev.level)
-				);
+			if (!isVisible) return null;
 
-		if (!isVisible) return null;
-		if (entry.title == "The Beginning of Infinity") {
-			// console.log({ entry });
-		}
-
-		return (
-			<div key={`${entry.id}-${index}`}>
-				<div
-					className={`toc-item level-${entry.level}`}
-					style={{
-						paddingLeft: `${entry.level * 1.5}rem`,
-						display: "flex",
-						alignItems: "center",
-						cursor: hasChildrenItems ? "pointer" : "default",
-					}}
-				>
-					{hasChildrenItems && (
-						<button
-							onClick={() => handleToggle(index)}
-							style={{
-								background: "none",
-								border: "none",
-								padding: "4px",
-								cursor: "pointer",
-								marginRight: "4px",
-							}}
-						>
-							{isExpanded ? "▼" : "▶"}
-						</button>
-					)}
-					<a
-						href={`#${entry.href}`}
-						onClick={onClose}
+			return (
+				<div key={`${entry.id}-${index}`}>
+					<div
+						className={`toc-item level-${entry.level}`}
 						style={{
-							textDecoration: "none",
-							color: entry.isPage ? "#666" : "inherit",
-							fontSize: entry.isPage ? "0.9em" : "inherit",
-							flex: 1,
+							paddingLeft: `${entry.level * 1.5}rem`,
+							display: "flex",
+							alignItems: "center",
+							cursor: hasChildrenItems ? "pointer" : "default",
 						}}
 					>
-						{entry.title}
-					</a>
+						{hasChildrenItems && (
+							<button
+								onClick={() => handleToggle(index)}
+								className="toggle-button"
+								style={{
+									background: "none",
+									border: "none",
+									padding: "4px",
+									cursor: "pointer",
+									marginRight: "4px",
+								}}
+							>
+								{isExpanded ? "▼" : "▶"}
+							</button>
+						)}
+						<a
+							href={`#${entry.href}`}
+							onClick={onClose}
+							style={{
+								textDecoration: "none",
+								color: entry.isPage ? "#666" : "inherit",
+								fontSize: entry.isPage ? "0.9em" : "inherit",
+								flex: 1,
+							}}
+						>
+							{entry.title}
+						</a>
+					</div>
 				</div>
-			</div>
-		);
-	};
+			);
+		};
 
-	return (
-		<div className={`sidebar ${isOpen ? "open" : ""}`}>
-			<div className="sidebar-header">
-				<h2>Contents</h2>
-				<button onClick={onClose} className="close-button">
-					×
-				</button>
-			</div>
-			<div className="sidebar-content">
-				<h3>{epubContent.metadata.title}</h3>
-				<p className="author">{epubContent.metadata.creator}</p>
-				<nav className="toc">
-					{epubContent.toc.map((entry, index) => {
-						return renderTocItem(entry, index);
-					})}
-				</nav>
-			</div>
-		</div>
-	);
-};
+		//   if (!isOpen) return null;
+
+		return (
+			<aside className={`sidebar ${isOpen ? "open" : ""}`}>
+				<div className="sidebar-header">
+					<h2>Contents</h2>
+					<button onClick={onClose} className="close-button">
+						×
+					</button>
+				</div>
+				<div className="sidebar-content">
+					<h3>{epubContent.metadata.title}</h3>
+					<p className="author">{epubContent.metadata.creator}</p>
+					<nav className="toc">
+						{epubContent.toc.map((entry, index) => renderTocItem(entry, index))}
+					</nav>
+				</div>
+			</aside>
+		);
+	}
+);
 
 export default Sidebar;

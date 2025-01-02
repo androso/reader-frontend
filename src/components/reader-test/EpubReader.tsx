@@ -1,19 +1,27 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, memo } from "react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
-import { useImageLoader } from "@/hooks/useImageLoader";
-import { useChapterLoader } from "./useChapterLoader";
-// import { useChapterLoader } from "../hooks/useChapterLoader";
+import { Chapter, useChapterLoader } from "./useChapterLoader";
 
 interface EpubReaderProps {
 	url: string;
 }
 
-const EpubReader: React.FC<EpubReaderProps> = ({ url }) => {
+const ChapterContent = memo(
+	({ chapter, index }: { chapter: Chapter; index: number }) => (
+		<div
+			id={`${chapter.hrefId}`}
+			key={chapter.id}
+			className={`chapter ${index > 0 ? "mt-8" : ""}`}
+			dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
+		/>
+	)
+);
+
+const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const { processEpub, isLoading, error, epubContent, zipData } =
 		useEpubProcessor();
 	const contentRef = useRef<HTMLDivElement>(null);
-	// const { loadImage } = useImageLoader(zipData, epubContent?.basePath || "");
 
 	const { chapters, loadAllChapters } = useChapterLoader(epubContent, zipData);
 
@@ -61,16 +69,11 @@ const EpubReader: React.FC<EpubReaderProps> = ({ url }) => {
 			/>
 			<div ref={contentRef} className="prose prose-lg mx-auto reader-content">
 				{chapters?.map((chapter, index) => (
-					<div
-						id={`${chapter.hrefId}`}
-						key={chapter.id}
-						className={`chapter ${index > 0 ? "mt-8" : ""}`}
-						dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
-					/>
+					<ChapterContent key={chapter.id} chapter={chapter} index={index} />
 				))}
 			</div>
 		</div>
 	);
-};
+});
 
 export default EpubReader;
