@@ -1,4 +1,3 @@
-
 "use client";
 
 import { BookViewer } from "@/components/BookViewer";
