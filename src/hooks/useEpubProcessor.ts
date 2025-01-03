@@ -13,7 +13,7 @@ export const useEpubProcessor = () => {
     try {
       setIsLoading(true);
       setError(null);
-
+      console.log({ url })
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch EPUB: ${response.statusText}`);

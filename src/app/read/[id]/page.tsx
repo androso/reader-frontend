@@ -4,6 +4,7 @@ import { BookViewer } from "@/components/BookViewer";
 import { ChatInterface } from "@/components/reader/ChatInterface";
 import { useParams } from "next/navigation";
 import { useWindowSize } from "@/hooks/useWindowSize";
+import EpubReader from "@/components/reader-test/EpubReader";
 
 export default function Reader() {
 	const params = useParams();
@@ -32,7 +33,10 @@ export default function Reader() {
 				<div className="w-[48%] h-full rounded-lg bg-white mr-5 overflow-hidden">
 					<ChatInterface />
 				</div>
-				<BookViewer bookId={bookId ?? ""} />
+				<div className="h-full overflow-y-scroll rounded-lg">  
+				<EpubReader url={`/api/books/${bookId}`} />
+				</div>
+				{/* <BookViewer bookId={bookId ?? ""} /> */}
 			</div>
 		</div>
 	);
