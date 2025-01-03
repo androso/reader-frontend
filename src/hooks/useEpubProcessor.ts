@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { processEpubFile } from '@/lib/epubProcessing';
 import { type EpubContent } from '@/types/EpubReader';

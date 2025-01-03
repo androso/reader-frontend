@@ -1,5 +1,4 @@
-import React, { useEffect, useState, memo } from "react";
-// import { EpubContent } from "./EpubUploader";
+import React, { useState, memo } from "react";
 import { type EpubContent } from "@/types/EpubReader";
 
 interface SidebarProps {
@@ -62,25 +61,15 @@ const Sidebar: React.FC<SidebarProps> = memo(
 			return (
 				<div key={`${entry.id}-${index}`}>
 					<div
-						className={`toc-item level-${entry.level}`}
+						className={`toc-item level-${entry.level} flex items-center cursor-pointer`}
 						style={{
 							paddingLeft: `${entry.level * 1.5}rem`,
-							display: "flex",
-							alignItems: "center",
-							cursor: hasChildrenItems ? "pointer" : "default",
 						}}
 					>
 						{hasChildrenItems && (
 							<button
 								onClick={() => handleToggle(index)}
-								className="toggle-button"
-								style={{
-									background: "none",
-									border: "none",
-									padding: "4px",
-									cursor: "pointer",
-									marginRight: "4px",
-								}}
+								className="bg-none border-none p-1 cursor-pointer mr-1"
 							>
 								{isExpanded ? "▼" : "▶"}
 							</button>
@@ -88,12 +77,7 @@ const Sidebar: React.FC<SidebarProps> = memo(
 						<a
 							href={`#${entry.href}`}
 							onClick={onClose}
-							style={{
-								textDecoration: "none",
-								color: entry.isPage ? "#666" : "inherit",
-								fontSize: entry.isPage ? "0.9em" : "inherit",
-								flex: 1,
-							}}
+							className={`text-decoration-none flex-1 ${entry.isPage ? "text-gray-600 text-sm" : ""}`}
 						>
 							{entry.title}
 						</a>
@@ -102,20 +86,18 @@ const Sidebar: React.FC<SidebarProps> = memo(
 			);
 		};
 
-		//   if (!isOpen) return null;
-
 		return (
-			<aside className={`sidebar ${isOpen ? "open" : ""}`}>
-				<div className="sidebar-header">
-					<h2>Contents</h2>
-					<button onClick={onClose} className="close-button">
+			<aside className={`fixed top-0 left-0 w-72 h-full bg-white shadow-lg z-50 transition-transform ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
+				<div className="flex justify-between items-center p-4 border-b border-gray-200 h-16">
+					<h2 className="text-lg font-semibold">Contents</h2>
+					<button onClick={onClose} className="bg-none border-none text-2xl cursor-pointer p-2">
 						×
 					</button>
 				</div>
-				<div className="sidebar-content">
-					<h3>{epubContent.metadata.title}</h3>
-					<p className="author">{epubContent.metadata.creator}</p>
-					<nav className="toc">
+				<div className="p-4 h-[calc(100%-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+					<h3 className="text-xl font-semibold">{epubContent.metadata.title}</h3>
+					<p className="text-gray-600 italic mt-2 mb-6">{epubContent.metadata.creator}</p>
+					<nav className="flex flex-col gap-3 pb-8">
 						{epubContent.toc.map((entry, index) => renderTocItem(entry, index))}
 					</nav>
 				</div>
