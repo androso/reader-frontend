@@ -82,21 +82,8 @@ body {
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;
-	z-index: 100;
+	z-index: 40;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar {
-	position: fixed;
-	top: 0;
-	left: -300px;
-
-	width: 300px;
-	height: 100vh;
-	background: white;
-	box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-	z-index: 1000;
-	transition: left 0.3s ease; /* Add this line */
 }
 
 .chapter {

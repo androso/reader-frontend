@@ -56,7 +56,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 
 	return (
 		<div className="reader-container">
-			<button
+			 <button
 				className="burger-menu"
 				onClick={() => setIsSidebarOpen(!isSidebarOpen)}
 			>
@@ -66,7 +66,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 				epubContent={epubContent}
 				isOpen={isSidebarOpen}
 				onClose={() => setIsSidebarOpen(false)}
-			/>
+			/> 
 			<div ref={contentRef} className="prose prose-lg mx-auto reader-content">
 				{chapters?.map((chapter, index) => (
 					<ChapterContent key={chapter.id} chapter={chapter} index={index} />
