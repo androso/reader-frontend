@@ -1,4 +1,7 @@
+
 import React, { useEffect, useRef, memo } from "react";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
 import { Chapter, useChapterLoader } from "./useChapterLoader";
@@ -12,19 +15,16 @@ const ChapterContent = memo(
 		<div
 			id={`${chapter.hrefId}`}
 			key={chapter.id}
-			className={`bg-white p-8 shadow-sm leading-[1.8] ${index > 0 ? "mt-8" : ""} [&>img]:max-w-full [&>img]:h-auto [&>img]:mx-auto [&>img]:my-4 [&>img]:block [&>h1]:text-gray-700 [&>h2]:text-gray-700 [&>h3]:text-gray-700 [&>h1]:mt-8 [&>h2]:mt-8 [&>h3]:mt-8 [&>h1]:mb-4 [&>h2]:mb-4 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:text-gray-600`}
+			className={`${index > 0 ? "mt-8" : ""} [&>img]:max-w-full [&>img]:h-auto [&>img]:mx-auto [&>img]:my-4 [&>img]:block [&>h1]:text-gray-700 [&>h2]:text-gray-700 [&>h3]:text-gray-700 [&>h1]:mt-8 [&>h2]:mt-8 [&>h3]:mt-8 [&>h1]:mb-4 [&>h2]:mb-4 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:text-gray-600`}
 			dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
 		/>
 	)
 );
 
 const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
-	const { processEpub, isLoading, error, epubContent, zipData } =
-		useEpubProcessor();
+	const { processEpub, isLoading, error, epubContent, zipData } = useEpubProcessor();
 	const contentRef = useRef<HTMLDivElement>(null);
-
 	const { chapters, loadAllChapters } = useChapterLoader(epubContent, zipData);
-
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
 	useEffect(() => {
@@ -55,24 +55,34 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	}
 
 	return (
-		<div className="relative max-w-3xl mx-auto px-4 bg-[#fff] ">
-			 <button
-				className="sticky top-4 left-4 p-2 bg-white border-none rounded cursor-pointer z-40 shadow-md"
-				onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-			>
-				☰
-			</button>
+		<>
+			{/* Header with burger menu */}
+			<div className="absolute top-0 left-0 right-0 p-4 bg-white z-10">
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+					className="hover:bg-gray-100"
+				>
+					<Menu className="h-6 w-6" />
+				</Button>
+			</div>
+
 			<Sidebar
 				epubContent={epubContent}
 				isOpen={isSidebarOpen}
 				onClose={() => setIsSidebarOpen(false)}
-			/> 
-			<div ref={contentRef} className="prose prose-lg mx-auto reader-content">
-				{chapters?.map((chapter, index) => (
-					<ChapterContent key={chapter.id} chapter={chapter} index={index} />
-				))}
+			/>
+
+			{/* Main content area */}
+			<div className="h-full overflow-y-auto pt-16 px-6">
+				<div className="max-w-3xl mx-auto py-6" ref={contentRef}>
+					{chapters?.map((chapter, index) => (
+						<ChapterContent key={chapter.id} chapter={chapter} index={index} />
+					))}
+				</div>
 			</div>
-		</div>
+		</>
 	);
 });
 

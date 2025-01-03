@@ -1,3 +1,4 @@
+
 import React, { useState, memo } from "react";
 import { type EpubContent } from "@/types/EpubReader";
 
@@ -59,9 +60,9 @@ const Sidebar: React.FC<SidebarProps> = memo(
 			if (!isVisible) return null;
 
 			return (
-				<div key={`${entry.id}-${index}`} className="">
+				<div key={`${entry.id}-${index}`}>
 					<div
-						className={`toc-item level-${entry.level} flex items-center cursor-pointer`}
+						className={`toc-item level-${entry.level} flex items-center cursor-pointer hover:bg-gray-100 px-2 py-1`}
 						style={{
 							paddingLeft: `${entry.level * 1.5}rem`,
 						}}
@@ -69,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = memo(
 						{hasChildrenItems && (
 							<button
 								onClick={() => handleToggle(index)}
-								className="bg-none border-none p-1 cursor-pointer mr-1"
+								className="bg-none border-none p-1 cursor-pointer mr-1 text-gray-600"
 							>
 								{isExpanded ? "▼" : "▶"}
 							</button>
@@ -77,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = memo(
 						<a
 							href={`#${entry.href}`}
 							onClick={onClose}
-							className={`text-decoration-none flex-1 ${entry.isPage ? "text-gray-600 text-sm" : ""}`}
+							className={`text-decoration-none flex-1 py-1 ${entry.isPage ? "text-gray-600 text-sm" : ""}`}
 						>
 							{entry.title}
 						</a>
@@ -87,21 +88,25 @@ const Sidebar: React.FC<SidebarProps> = memo(
 		};
 
 		return (
-			<aside className={`absolute top-0 left-0 w-72 bg-white shadow-lg z-50 transition-transform h-full overflow-y-scroll ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
-				<div className="flex justify-between items-center p-4 border-b border-gray-200 h-16">
-					<h2 className="text-lg font-semibold">Contents</h2>
-					<button onClick={onClose} className="bg-none border-none text-2xl cursor-pointer p-2">
-						×
-					</button>
+			<div
+				className={`absolute overflow-x-hidden h-[calc(100%-4rem)] top-16 left-0 bg-white border-r shadow-lg transition-transform duration-300 ease-in-out transform ${
+					isOpen ? "translate-x-0" : "-translate-x-full"
+				}`}
+			>
+				<div className="w-64 h-full">
+					<div className="p-4">
+						<h3 className="text-lg font-semibold">{epubContent.metadata.title}</h3>
+						<p className="text-gray-600 italic mt-2 mb-4">
+							{epubContent.metadata.creator}
+						</p>
+					</div>
+					<div className="overflow-y-auto h-[calc(100%-7rem)]">
+						<nav className="flex flex-col">
+							{epubContent.toc.map((entry, index) => renderTocItem(entry, index))}
+						</nav>
+					</div>
 				</div>
-				<div className="p-4 h-[calc(100%-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-					<h3 className="text-xl font-semibold">{epubContent.metadata.title}</h3>
-					<p className="text-gray-600 italic mt-2 mb-6">{epubContent.metadata.creator}</p>
-					<nav className="flex flex-col gap-3 pb-8">
-						{epubContent.toc.map((entry, index) => renderTocItem(entry, index))}
-					</nav>
-				</div>
-			</aside>
+			</div>
 		);
 	}
 );
