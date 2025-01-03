@@ -55,7 +55,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	}
 
 	return (
-		<div className="reader-container">
+		<div className="max-w-3xl mx-auto my-8 px-4 bg-[#fafaf9]">
 			 <button
 				className="fixed top-4 left-4 p-2 bg-white border-none rounded cursor-pointer z-40 shadow-md"
 				onClick={() => setIsSidebarOpen(!isSidebarOpen)}

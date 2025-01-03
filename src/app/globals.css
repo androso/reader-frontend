@@ -73,13 +73,6 @@ body {
 
 
 
-.reader-container {
-	max-width: 800px;
-	margin: 2rem auto;
-	padding: 0 1rem;
-	background-color: #fafaf9;
-}
-
 .reader-content {
 	max-width: 70ch;
 	line-height: 1.75;
