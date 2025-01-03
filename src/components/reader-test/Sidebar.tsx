@@ -89,12 +89,12 @@ const Sidebar: React.FC<SidebarProps> = memo(
 
 		return (
 			<div
-				className={`absolute overflow-x-hidden h-[calc(100%-4rem)] top-16 left-0 bg-white border-r shadow-lg transition-transform duration-300 ease-in-out transform ${
+				className={`absolute h-full overflow-x-hidden top-0 pt-12  left-0 bg-white border-r shadow-lg transition-transform duration-300 ease-in-out transform ${
 					isOpen ? "translate-x-0" : "-translate-x-full"
 				}`}
 			>
-				<div className="w-64 h-full">
-					<div className="p-4">
+				<div className="w-64 h-full p-4">
+					<div className="">
 						<h3 className="text-lg font-semibold">{epubContent.metadata.title}</h3>
 						<p className="text-gray-600 italic mt-2 mb-4">
 							{epubContent.metadata.creator}
