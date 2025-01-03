@@ -11,8 +11,8 @@ export default function Reader() {
 	const bookId = params.id as string | null;
 
 	return (
-		<div className="max-h-screen bg-[#D7D7D7] ">
-			<div className="max-h-screen w-full rounded-lg relative flex justify-center p-8">
+		<div className="h-screen bg-[#D7D7D7] ">
+			<div className="h-screen w-full rounded-lg relative flex justify-center p-8">
 				<div className="w-[48%] bg-[#FCFCFC] mr-4 rounded-lg">
 					<ChatInterface />
 				</div>
