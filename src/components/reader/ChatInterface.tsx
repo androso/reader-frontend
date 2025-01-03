@@ -1,25 +1,9 @@
-
 "use client"
 import { useChat } from "ai/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SendHorizontal } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { memo } from "react";
-
-const ChatMessage = memo(({ content, role }: { content: string; role: string }) => (
-  <div
-    className={`mb-4 ${
-      role === "assistant"
-        ? "text-blue-600"
-        : "text-gray-700"
-    }`}
-  >
-    <p className="text-sm">{content}</p>
-  </div>
-));
-
-ChatMessage.displayName = "ChatMessage";
 
 export function ChatInterface() {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
@@ -28,11 +12,16 @@ export function ChatInterface() {
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 p-4">
         {messages.map((message) => (
-          <ChatMessage
+          <div
             key={message.id}
-            content={message.content}
-            role={message.role}
-          />
+            className={`mb-4 ${
+              message.role === "assistant"
+                ? "text-blue-600"
+                : "text-gray-700"
+            }`}
+          >
+            <p className="text-sm">{message.content}</p>
+          </div>
         ))}
       </ScrollArea>
       <form 
