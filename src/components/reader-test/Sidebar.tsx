@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = memo(
 		};
 
 		return (
-			<aside className={`sticky top-0 left-0 w-72 bg-white shadow-lg z-50 transition-transform max-h-full overflow-y-scroll ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
+			<aside className={`absolute top-0 left-0 w-72 bg-white shadow-lg z-50 transition-transform h-full overflow-y-scroll ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
 				<div className="flex justify-between items-center p-4 border-b border-gray-200 h-16">
 					<h2 className="text-lg font-semibold">Contents</h2>
 					<button onClick={onClose} className="bg-none border-none text-2xl cursor-pointer p-2">
