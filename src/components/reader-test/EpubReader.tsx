@@ -12,7 +12,7 @@ const ChapterContent = memo(
 		<div
 			id={`${chapter.hrefId}`}
 			key={chapter.id}
-			className={`chapter ${index > 0 ? "mt-8" : ""}`}
+			className={`bg-white p-8 shadow-sm leading-[1.8] ${index > 0 ? "mt-8" : ""} [&>img]:max-w-full [&>img]:h-auto [&>img]:mx-auto [&>img]:my-4 [&>img]:block [&>h1]:text-gray-700 [&>h2]:text-gray-700 [&>h3]:text-gray-700 [&>h1]:mt-8 [&>h2]:mt-8 [&>h3]:mt-8 [&>h1]:mb-4 [&>h2]:mb-4 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:text-gray-600`}
 			dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
 		/>
 	)

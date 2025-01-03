@@ -71,33 +71,7 @@ body {
 	}
 }
 
-.chapter {
-	background: white;
-	padding: 2rem;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	line-height: 1.8;
-	margin-bottom: 0;
-}
 
-.chapter img {
-	max-width: 100%;
-	height: auto;
-	margin: 1rem auto;
-	display: block;
-}
-
-.chapter h1,
-.chapter h2,
-.chapter h3 {
-	color: #2d3748;
-	margin-top: 2rem;
-	margin-bottom: 1rem;
-}
-
-.chapter p {
-	margin-bottom: 1.5rem;
-	color: #4a5568;
-}
 
 .reader-container {
 	max-width: 800px;
