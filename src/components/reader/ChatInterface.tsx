@@ -7,9 +7,9 @@ import { SendHorizontal } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { memo } from "react";
 
-const MessageList = memo(({ messages }) => (
+const MessageList = memo(({ messages }: { messages: any }) => (
   <ScrollArea className="flex-1 p-4">
-    {messages.map((message) => (
+    {messages.map((message: any) => (
       <div
         key={message.id}
         className={`mb-4 ${
