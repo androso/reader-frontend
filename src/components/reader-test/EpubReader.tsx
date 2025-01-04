@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -25,50 +26,6 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const contentRef = useRef<HTMLDivElement>(null);
 	const { chapters, loadAllChapters } = useChapterLoader(epubContent, zipData);
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-	const observerRef = useRef<IntersectionObserver | null>(null);
-	const bookId = url.split('/').pop() || '';
-
-	// Load saved position on mount
-	useEffect(() => {
-		const savedPosition = localStorage.getItem(`book-position-${bookId}`);
-		if (savedPosition && contentRef.current) {
-			const element = document.getElementById(savedPosition);
-			element?.scrollIntoView({ behavior: 'smooth' });
-		}
-	}, [bookId, chapters]);
-
-	// Track visible chapters
-	useEffect(() => {
-		if (!chapters || !contentRef.current) return;
-
-		const callback: IntersectionObserverCallback = (entries) => {
-			entries.forEach(entry => {
-				if (entry.isIntersecting) {
-					localStorage.setItem(`book-position-${bookId}`, entry.target.id);
-				}
-			});
-		};
-
-		const observer = new IntersectionObserver(callback, {
-			root: contentRef.current,
-			rootMargin: '0px',
-			threshold: 0.5,
-		});
-
-		chapters.forEach(chapter => {
-			const element = document.getElementById(chapter.hrefId);
-			if (element) {
-				observer.observe(element);
-			}
-		});
-
-		observerRef.current = observer;
-
-		return () => {
-			observerRef.current?.disconnect();
-		};
-	}, [chapters]);
-
 
 	useEffect(() => {
 		processEpub(url);
