@@ -17,12 +17,12 @@ export function useUser() {
 			setHasToken(true);
 		}
 	}, []);
-
+	console.log("inside useuser", process.env.NEXT_PUBLIC_API_URL)
 	return useQuery({
-		queryKey: ["http://localhost:3001/api/user"],
+		queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
 		queryFn: async () => {
 			const token = localStorage.getItem("token");
-			const response = await fetch("http://localhost:3001/api/user", {
+			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
@@ -40,7 +40,7 @@ export function useUser() {
 export function useGoogleSignIn() {
 	return useMutation({
 		mutationFn: async (token: string) => {
-			const res = await fetch("http://localhost:3001/api/auth/google", {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -59,7 +59,7 @@ export function useGoogleSignIn() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["http://localhost:3001/api/user"],
+				queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
 			});
 		},
 	});
@@ -68,6 +68,6 @@ export function useGoogleSignIn() {
 export function signOut() {
 	localStorage.removeItem("token");
 	queryClient.invalidateQueries({
-		queryKey: ["http://localhost:3001/api/user"],
+		queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
 	});
 }
