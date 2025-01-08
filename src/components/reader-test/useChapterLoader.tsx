@@ -99,6 +99,12 @@ export const useChapterLoader = (
 
 			await Promise.all(imagePromises);
 			doc.querySelectorAll("script").forEach((script) => script.remove());
+			
+
+            Array.from(doc.body.children).forEach((child) => {
+				// here i can add identifiers to each text element that i could then use to register the progress of a user on a book
+                child.classList.add("just-id");
+            });
 			return doc.body;
 		},
 		[epubContent, loadImage, loadCssContent]
@@ -123,6 +129,7 @@ export const useChapterLoader = (
 				const content = await file.async("text");
 				const baseUrl = `${window.location.origin}/${epubContent.basePath}`;
 				const element = await processHtml(content, baseUrl);
+
 				const newHref = manifestItem.href.includes(".")
 					? manifestItem.href.substring(0, manifestItem.href.lastIndexOf("."))
 					: manifestItem.href;

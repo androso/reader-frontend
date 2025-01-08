@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
 import { Chapter, useChapterLoader } from "./useChapterLoader";
+import { useReadingProgress } from "@/hooks/useReadingProgress";
 
 interface EpubReaderProps {
 	url: string;
@@ -14,7 +15,6 @@ const ChapterContent = memo(
 		<div
 			id={`${chapter.hrefId}`}
 			key={chapter.id}
-			className={`${index > 0 ? "mt-8" : ""} [&>img]:max-w-full [&>img]:h-auto [&>img]:mx-auto [&>img]:my-4 [&>img]:block [&>h1]:text-gray-700 [&>h2]:text-gray-700 [&>h3]:text-gray-700 [&>h1]:mt-8 [&>h2]:mt-8 [&>h3]:mt-8 [&>h1]:mb-4 [&>h2]:mb-4 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:text-gray-600`}
 			dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
 		/>
 	)
@@ -25,7 +25,13 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const contentRef = useRef<HTMLDivElement>(null);
 	const { chapters, loadAllChapters } = useChapterLoader(epubContent, zipData);
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+	const bookId = url.split("/").pop()!;
+	const progress = useReadingProgress(contentRef, bookId);
 
+	// useEffect(() => {
+	// 	console.log({progress})
+	// }, [progress])
+	
 	useEffect(() => {
 		processEpub(url);
 	}, [url, processEpub]);
@@ -72,8 +78,8 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 			/>
 
 			{/* Main content area */}
-			<div className="h-full overflow-y-auto pt-16 px-6">
-				<div className="max-w-3xl mx-auto py-6" ref={contentRef}>
+			<div className="h-full overflow-y-auto ">
+				<div className="max-w-3xl mx-auto pt-20 px-6 	" ref={contentRef}>
 					{chapters?.map((chapter, index) => (
 						<ChapterContent key={chapter.id} chapter={chapter} index={index} />
 					))}
