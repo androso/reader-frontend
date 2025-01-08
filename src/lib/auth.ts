@@ -17,7 +17,7 @@ export function useUser() {
 			setHasToken(true);
 		}
 	}, []);
-	console.log("inside useuser", process.env.NEXT_PUBLIC_API_URL)
+	
 	return useQuery({
 		queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
 		queryFn: async () => {

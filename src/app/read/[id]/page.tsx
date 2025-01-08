@@ -21,7 +21,7 @@ export default function Reader() {
 					</div>
 				)}
 				<div className={`w-${isMobile ? '[100%]' : '[48%]'} relative overflow-hidden bg-[#FCFCFC] rounded-lg`}>
-					<EpubReader url={`/api/books/${bookId}`} />
+					<EpubReader url={`${process.env.NEXT_PUBLIC_API_URL}/api/books/${bookId}`} />
 				</div>
 			</div>
 		</div>

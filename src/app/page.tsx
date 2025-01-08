@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/FileUpload";
@@ -18,8 +17,23 @@ export default function Page() {
 	const { data: userData, isSuccess } = useUser();
 	const { mutate: signIn, isPending } = useGoogleSignIn();
 	const { data: booksData } = useQuery({
-		queryKey: ["/api/books"],
-		enabled: false,
+		queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/books`],
+		queryFn: async () => {
+			const token = localStorage.getItem("token");
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/books`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
+			if (!response.ok) {
+				throw new Error("Network response was not ok");
+			}
+			return response.json();
+		},
+		enabled: true,
 	});
 
 	const queryClient = useQueryClient();
@@ -28,10 +42,17 @@ export default function Page() {
 		mutationFn: async (file: File) => {
 			const formData = new FormData();
 			formData.append("file", file);
-			const response = await fetch("/api/books", {
-				method: "POST",
-				body: formData,
-			});
+			const token = localStorage.getItem("token");
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/books`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+					method: "POST",
+					body: formData,
+				},
+			);
 			if (!response.ok) {
 				throw new Error("Failed to upload file");
 			}
@@ -100,12 +121,15 @@ export default function Page() {
 		<div className="container mx-auto p-8">
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-3xl font-semibold">Library</h1>
-				<FileUpload onUpload={handleFileUpload} isLoading={isUploading} />
+				<FileUpload
+					onUpload={handleFileUpload}
+					isLoading={isUploading}
+				/>
 			</div>
 
 			<ScrollArea className="h-[calc(100vh-12rem)]">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{/* {booksData?.books?.map((book) => (
+					{booksData?.books?.map((book) => (
 						<Card
 							key={book.id}
 							className="relative transition-colors hover:bg-slate-200 p-5 cursor-pointer"
@@ -116,17 +140,23 @@ export default function Page() {
 							<h3 className="font-medium">{book.title}</h3>
 							<div
 								className={`transition-opacity absolute right-4 top-1/2 transform -translate-y-1/2 bg-slate-900 py-2 px-2 rounded-full text-white hover:text-red-400 ${
-									hoveredBookId === book.id ? "opacity-100" : "opacity-0"
+									hoveredBookId === book.id
+										? "opacity-100"
+										: "opacity-0"
 								}`}
 								onClick={(e) => {
 									e.stopPropagation();
 									deleteItem(book.id);
 								}}
 							>
-								<Icon icon="solar:archive-bold" width="16" height="16" />
+								<Icon
+									icon="solar:archive-bold"
+									width="16"
+									height="16"
+								/>
 							</div>
 						</Card>
-					))} */}
+					))}
 				</div>
 			</ScrollArea>
 		</div>
