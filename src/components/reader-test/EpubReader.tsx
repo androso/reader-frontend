@@ -17,21 +17,27 @@ const ChapterContent = memo(
 			key={chapter.id}
 			dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
 		/>
-	)
+	),
 );
 
 const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
-	const { processEpub, isLoading, error, epubContent, zipData } = useEpubProcessor();
+	const { processEpub, isLoading, error, epubContent, zipData } =
+		useEpubProcessor();
 	const contentRef = useRef<HTMLDivElement>(null);
-	const { chapters, loadAllChapters } = useChapterLoader(epubContent, zipData);
+	const { chapters, loadAllChapters } = useChapterLoader(
+		epubContent,
+		zipData,
+	);
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 	const bookId = url.split("/").pop()!;
-	const progress = useReadingProgress(contentRef, bookId);
+	// const progress = useReadingProgress(contentRef, bookId);
+	const [activeTextblockId, setActiveTextblockId] = React.useState<
+		string | null
+	>(null);
+	useEffect(() => {
+		console.log({ chapters });
+	}, [chapters]);
 
-	// useEffect(() => {
-	// 	console.log({progress})
-	// }, [progress])
-	
 	useEffect(() => {
 		processEpub(url);
 	}, [url, processEpub]);
@@ -42,11 +48,28 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 		}
 	}, [epubContent, zipData, loadAllChapters]);
 
+	// Handle keyboard navigation
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "ArrowDown") {
+				e.preventDefault();
+				// get id of the next textblock and update state
+				
+			} else if (e.key == "ArrowUp") {
+				e.preventDefault();
+				// get id of the previous textblock and update state
+			}
+		}
+	}, [])
+
+	
 	if (isLoading) {
 		return (
 			<div className="loading-spinner">
 				<div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-r-blue-500 border-b-transparent border-l-transparent"></div>
-				<div className="mt-4 text-lg text-gray-600">Loading book...</div>
+				<div className="mt-4 text-lg text-gray-600">
+					Loading book...
+				</div>
 			</div>
 		);
 	}
@@ -80,10 +103,32 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 			{/* Main content area */}
 			<div className="h-full overflow-y-auto ">
 				<div className="max-w-3xl mx-auto pt-20 px-6 	" ref={contentRef}>
-					{chapters?.map((chapter, index) => (
+					{/* {chapters?.map((chapter, index) => (
 						<ChapterContent key={chapter.id} chapter={chapter} index={index} />
-					))}
-					
+					))} */}
+					{chapters?.map((chapter) => {
+						return (
+							<div key={chapter.id} id={chapter.hrefId}>
+								{chapter.textBlocks.map((textBlock) => {
+									return (
+										<div
+											key={textBlock.id}
+											id={textBlock.id}
+											className={`mb-4 mb-4 p-4 transition-all ${
+												activeTextblockId ===
+												textBlock.id
+													? "border-l-4 border-blue-500 bg-blue-50"
+													: "border-l-4 border-transparent"
+											}`}
+											dangerouslySetInnerHTML={{
+												__html: textBlock.content,
+											}}
+										/>
+									);
+								})}
+							</div>
+						);
+					})}
 					{/*
 						<Chapter>
 							<TextBlock />
