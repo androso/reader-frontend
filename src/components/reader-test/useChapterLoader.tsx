@@ -1,19 +1,20 @@
 import { useState, useCallback } from "react";
 import JSZip from "jszip";
-import { type EpubContent } from "@/types/EpubReader";
+import { TextBlock, type EpubContent } from "@/types/EpubReader";
 import { useImageLoader } from "@/hooks/useImageLoader";
 import { resolveRelativePath } from "@/lib/utils";
 
 export interface Chapter {
 	id: string;
 	content: string;
-	element: HTMLElement;
+	// element: HTMLElement;
 	hrefId: string;
+	textBlocks: TextBlock[];
 }
 
 export const useChapterLoader = (
 	epubContent: EpubContent | null,
-	zipData: JSZip | null
+	zipData: JSZip | null,
 ) => {
 	const { loadImage } = useImageLoader(zipData, epubContent?.basePath ?? "");
 	const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -40,9 +41,12 @@ export const useChapterLoader = (
 						return content.replace(
 							/@import\s+['"]([^'"]+)['"]/g,
 							async (_, importPath) => {
-								const importedCss = await loadCssContent(importPath, path);
+								const importedCss = await loadCssContent(
+									importPath,
+									path,
+								);
 								return importedCss || "";
-							}
+							},
 						);
 					}
 				}
@@ -51,17 +55,21 @@ export const useChapterLoader = (
 			}
 			return null;
 		},
-		[epubContent, zipData]
+		[epubContent, zipData],
 	);
 
 	const processHtml = useCallback(
-		async (html: string, baseUrl: string, chapterId: string): Promise<HTMLElement> => {
+		async (
+			html: string,
+			baseUrl: string,
+			chapterId: string,
+		): Promise<TextBlock[]> => {
 			if (!epubContent) throw new Error("No EPUB content available");
 			const parser = new DOMParser();
 			const doc = parser.parseFromString(html, "text/html");
 
 			const stylePromises = Array.from(
-				doc.querySelectorAll('link[rel="stylesheet"]')
+				doc.querySelectorAll('link[rel="stylesheet"]'),
 			).map(async (stylesheet) => {
 				const href = stylesheet.getAttribute("href");
 				if (href) {
@@ -79,11 +87,15 @@ export const useChapterLoader = (
 			const imagePromises = Array.from(doc.querySelectorAll("img")).map(
 				async (img) => {
 					const src = img.getAttribute("src");
-					if (src && !src.startsWith("blob:") && !src.startsWith("data:")) {
+					if (
+						src &&
+						!src.startsWith("blob:") &&
+						!src.startsWith("data:")
+					) {
 						try {
 							const resolvedPath = resolveRelativePath(
 								src,
-								epubContent.basePath
+								epubContent.basePath,
 							);
 							img.setAttribute("data-original-src", resolvedPath);
 							const dataUrl = await loadImage(resolvedPath);
@@ -94,20 +106,30 @@ export const useChapterLoader = (
 							img.alt = "Failed to load image";
 						}
 					}
-				}
+				},
 			);
 
 			await Promise.all(imagePromises);
 			doc.querySelectorAll("script").forEach((script) => script.remove());
-			
 
-            Array.from(doc.body.children).forEach((child) => {
+			const textBlocks: TextBlock[] = [];
+			Array.from(doc.body.children).forEach((child, idx) => {
 				// here i can add identifiers to each text element that i could then use to register the progress of a user on a book
-                child.classList.add("just-id");
-            });
-			return doc.body;
+				// child.classList.add("just-id");
+				const blockElement = document.createElement("div");
+
+				blockElement.innerHTML = child.outerHTML;
+				textBlocks.push({
+					id: `${chapterId}-block-${idx}`,
+					content: child.outerHTML,
+					element: blockElement,
+				});
+			});
+
+			// return doc.body;
+			return textBlocks;
 		},
-		[epubContent, loadImage, loadCssContent]
+		[epubContent, loadImage, loadCssContent],
 	);
 
 	const loadChapter = useCallback(
@@ -128,19 +150,32 @@ export const useChapterLoader = (
 
 				const content = await file.async("text");
 				const baseUrl = `${window.location.origin}/${epubContent.basePath}`;
-				const element = await processHtml(content, baseUrl, id);
+				const textBlocks = await processHtml(content, baseUrl, id);
 
 				const newHref = manifestItem.href.includes(".")
-					? manifestItem.href.substring(0, manifestItem.href.lastIndexOf("."))
+					? manifestItem.href.substring(
+							0,
+							manifestItem.href.lastIndexOf("."),
+						)
 					: manifestItem.href;
 
-				return { id, content, element, hrefId: newHref };
+				return {
+					id,
+					content: content,
+					hrefId: newHref,
+					textBlocks,
+				};
+				// const newHref = manifestItem.href.includes(".")
+				// 	? manifestItem.href.substring(0, manifestItem.href.lastIndexOf("."))
+				// 	: manifestItem.href;
+
+				// return { id, content, element, hrefId: newHref };
 			} catch (err) {
 				console.warn(`Failed to load chapter ${id}:`, err);
 				return null;
 			}
 		},
-		[epubContent, zipData, processHtml]
+		[epubContent, zipData, processHtml],
 	);
 
 	const loadAllChapters = useCallback(async () => {
@@ -152,15 +187,26 @@ export const useChapterLoader = (
 		if (!chapters.length) {
 			setIsLoading(true);
 			try {
-				const chapterPromises = epubContent.spine.map((id) => loadChapter(id));
-				const loadedChapters = await Promise.all(chapterPromises);
-				const validChapters = loadedChapters.filter(
-					(ch): ch is Chapter => ch !== null
+				const chapterPromises = epubContent.spine.map((id) =>
+					loadChapter(id),
 				);
+				const loadedChapters = await Promise.all(chapterPromises);
+				// when book = beginning of infinity then we only render one chapter
+				// just for now
+				const validChapters = loadedChapters.filter(
+					(ch, i): ch is Chapter => i == 5,
+				);
+				// const validChapters = loadedChapters.filter(
+				// 	(ch): ch is Chapter => ch !== null,
+				// );
+
 				setChapters(validChapters);
+				// setChapters(validChapters[6]);
 			} catch (err) {
 				setError(
-					err instanceof Error ? err.message : "Failed to load chapters"
+					err instanceof Error
+						? err.message
+						: "Failed to load chapters",
 				);
 			} finally {
 				setIsLoading(false);

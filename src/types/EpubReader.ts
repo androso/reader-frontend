@@ -24,3 +24,15 @@ export interface EpubContent {
   basePath: string;
   toc: TocEntry[];
 }
+
+export interface TextBlock  {
+  id: string;
+  content: string;
+  element: HTMLElement
+}
+
+export interface ChapterBlock {
+  id: string;
+  hrefId: string;
+  textBlocks: TextBlock[]
+}
