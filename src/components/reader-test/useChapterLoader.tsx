@@ -55,7 +55,7 @@ export const useChapterLoader = (
 	);
 
 	const processHtml = useCallback(
-		async (html: string, baseUrl: string): Promise<HTMLElement> => {
+		async (html: string, baseUrl: string, chapterId: string): Promise<HTMLElement> => {
 			if (!epubContent) throw new Error("No EPUB content available");
 			const parser = new DOMParser();
 			const doc = parser.parseFromString(html, "text/html");
@@ -128,7 +128,7 @@ export const useChapterLoader = (
 
 				const content = await file.async("text");
 				const baseUrl = `${window.location.origin}/${epubContent.basePath}`;
-				const element = await processHtml(content, baseUrl);
+				const element = await processHtml(content, baseUrl, id);
 
 				const newHref = manifestItem.href.includes(".")
 					? manifestItem.href.substring(0, manifestItem.href.lastIndexOf("."))
