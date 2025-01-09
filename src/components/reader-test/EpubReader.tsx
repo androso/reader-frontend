@@ -83,6 +83,12 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 					{chapters?.map((chapter, index) => (
 						<ChapterContent key={chapter.id} chapter={chapter} index={index} />
 					))}
+					
+					{/*
+						<Chapter>
+							<TextBlock />
+						</Chapter>
+					*/}
 				</div>
 			</div>
 		</>
