@@ -28,7 +28,7 @@ const TextBlock = memo(
 			}`}
 			dangerouslySetInnerHTML={{ __html: content }}
 		/>
-	),
+	)
 );
 
 TextBlock.displayName = "TextBlock";
@@ -52,7 +52,7 @@ const Chapter = memo(
 				/>
 			))}
 		</div>
-	),
+	)
 );
 
 Chapter.displayName = "Chapter";
@@ -64,7 +64,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 	const { chapters, loadAllChapters, flatTextBlocks } = useChapterLoader(
 		epubContent,
-		zipData,
+		zipData
 	);
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 	const [activeTextblockId, setActiveTextblockId] = React.useState<
@@ -83,7 +83,8 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 		}
 
 		// Calculate the visible height of the element
-		const visibleHeight = Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0);
+		const visibleHeight =
+			Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0);
 		const ratio = visibleHeight / rect.height;
 
 		return Math.max(0, Math.min(1, ratio));
@@ -110,6 +111,12 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 		return mostVisibleId;
 	}, [flatTextBlocks, getVisibilityRatio]);
 
+	const saveProgress = (textBlockId: string) => {
+		// store in local storage the id along with the book and chapter so that it is better recognizable
+		const bookId = window.location.pathname.split("/")[2];
+		localStorage.setItem(`book-progress-${bookId}`, textBlockId);
+	};
+
 	// Handle scroll events
 	const handleScroll = useCallback(() => {
 		if (!isManualScroll) {
@@ -123,14 +130,21 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 				const mostVisibleId = findMostVisibleBlock();
 				if (mostVisibleId && mostVisibleId !== activeTextblockId) {
 					setActiveTextblockId(mostVisibleId);
+					saveProgress(mostVisibleId);
 				}
-			}, 100); // Debounce scroll events
+			}, 1000); // Debounce scroll events
 		}
 	}, [findMostVisibleBlock, activeTextblockId, isManualScroll]);
 
 	useEffect(() => {
 		if (!activeTextblockId && flatTextBlocks.length > 0) {
-			setActiveTextblockId(flatTextBlocks[0].id);
+			const bookId = window.location.pathname.split("/")[2];
+			const storedId = localStorage.getItem(`book-progress-${bookId}`);
+			setActiveTextblockId(storedId || flatTextBlocks[0].id);
+			const element = document.getElementById(storedId || flatTextBlocks[0].id);
+			if (element) {
+				element.scrollIntoView({ behavior: "smooth", block: "center" });
+			}
 		}
 	}, [flatTextBlocks]);
 
@@ -148,9 +162,9 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	useEffect(() => {
 		const container = contentRef.current?.parentElement;
 		if (container) {
-			container.addEventListener('scroll', handleScroll);
+			container.addEventListener("scroll", handleScroll);
 			return () => {
-				container.removeEventListener('scroll', handleScroll);
+				container.removeEventListener("scroll", handleScroll);
 				if (scrollTimeout.current) {
 					clearTimeout(scrollTimeout.current);
 				}
@@ -168,15 +182,12 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 				setIsManualScroll(true);
 
 				const currTextBlockIndex = flatTextBlocks.findIndex(
-					(block) => block.id === activeTextblockId,
+					(block) => block.id === activeTextblockId
 				);
 
 				const newIndex =
 					e.key === "ArrowDown"
-						? Math.min(
-								currTextBlockIndex + 1,
-								flatTextBlocks.length - 1,
-						  )
+						? Math.min(currTextBlockIndex + 1, flatTextBlocks.length - 1)
 						: Math.max(currTextBlockIndex - 1, 0);
 
 				if (newIndex !== currTextBlockIndex) {
@@ -205,9 +216,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 		return (
 			<div className="loading-spinner">
 				<div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-r-blue-500 border-b-transparent border-l-transparent" />
-				<div className="mt-4 text-lg text-gray-600">
-					Loading book...
-				</div>
+				<div className="mt-4 text-lg text-gray-600">Loading book...</div>
 			</div>
 		);
 	}
@@ -243,7 +252,8 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 						<Chapter
 							key={chapter.id}
 							chapter={chapter}
-							activeTextblockId={activeTextblockId}
+							// activeTextblockId={activeTextblockId}
+							activeTextblockId={""}
 						/>
 					))}
 				</div>
