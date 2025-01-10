@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, memo } from "react";
+import React, { useEffect, useRef, memo, useCallback } from "react";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
@@ -61,6 +61,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const { processEpub, isLoading, error, epubContent, zipData } =
 		useEpubProcessor();
 	const contentRef = useRef<HTMLDivElement>(null);
+	const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 	const { chapters, loadAllChapters, flatTextBlocks } = useChapterLoader(
 		epubContent,
 		zipData,
@@ -69,6 +70,63 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const [activeTextblockId, setActiveTextblockId] = React.useState<
 		string | null
 	>(null);
+	const [isManualScroll, setIsManualScroll] = React.useState(false);
+
+	// Calculate element visibility in viewport
+	const getVisibilityRatio = useCallback((element: HTMLElement) => {
+		const rect = element.getBoundingClientRect();
+		const windowHeight = window.innerHeight;
+
+		// If element is not in viewport at all
+		if (rect.bottom < 0 || rect.top > windowHeight) {
+			return 0;
+		}
+
+		// Calculate the visible height of the element
+		const visibleHeight = Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0);
+		const ratio = visibleHeight / rect.height;
+
+		return Math.max(0, Math.min(1, ratio));
+	}, []);
+
+	// Find the most visible text block
+	const findMostVisibleBlock = useCallback(() => {
+		if (!flatTextBlocks) return null;
+
+		let maxVisibility = 0;
+		let mostVisibleId = null;
+
+		for (const block of flatTextBlocks) {
+			const element = document.getElementById(block.id);
+			if (element) {
+				const visibility = getVisibilityRatio(element);
+				if (visibility > maxVisibility) {
+					maxVisibility = visibility;
+					mostVisibleId = block.id;
+				}
+			}
+		}
+
+		return mostVisibleId;
+	}, [flatTextBlocks, getVisibilityRatio]);
+
+	// Handle scroll events
+	const handleScroll = useCallback(() => {
+		if (!isManualScroll) {
+			// Clear existing timeout
+			if (scrollTimeout.current !== null) {
+				clearTimeout(scrollTimeout.current);
+			}
+
+			// Set a new timeout
+			scrollTimeout.current = setTimeout(() => {
+				const mostVisibleId = findMostVisibleBlock();
+				if (mostVisibleId && mostVisibleId !== activeTextblockId) {
+					setActiveTextblockId(mostVisibleId);
+				}
+			}, 100); // Debounce scroll events
+		}
+	}, [findMostVisibleBlock, activeTextblockId, isManualScroll]);
 
 	useEffect(() => {
 		if (!activeTextblockId && flatTextBlocks.length > 0) {
@@ -86,6 +144,20 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 		}
 	}, [epubContent, zipData, loadAllChapters]);
 
+	// Set up scroll listener
+	useEffect(() => {
+		const container = contentRef.current?.parentElement;
+		if (container) {
+			container.addEventListener('scroll', handleScroll);
+			return () => {
+				container.removeEventListener('scroll', handleScroll);
+				if (scrollTimeout.current) {
+					clearTimeout(scrollTimeout.current);
+				}
+			};
+		}
+	}, [handleScroll]);
+
 	// Handle keyboard navigation
 	useEffect(() => {
 		if (!flatTextBlocks) return;
@@ -93,17 +165,18 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "ArrowDown" || e.key === "ArrowUp") {
 				e.preventDefault();
+				setIsManualScroll(true);
+
 				const currTextBlockIndex = flatTextBlocks.findIndex(
 					(block) => block.id === activeTextblockId,
 				);
-				
-				// if the next item is outside the limits of the flatTextBlocks we dont change it
+
 				const newIndex =
 					e.key === "ArrowDown"
 						? Math.min(
 								currTextBlockIndex + 1,
 								flatTextBlocks.length - 1,
-							)
+						  )
 						: Math.max(currTextBlockIndex - 1, 0);
 
 				if (newIndex !== currTextBlockIndex) {
@@ -116,6 +189,11 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 						block: "center",
 					});
 				}
+
+				// Reset manual scroll after animation completes
+				setTimeout(() => {
+					setIsManualScroll(false);
+				}, 1000); // Should match scroll-behavior: smooth duration
 			}
 		};
 
