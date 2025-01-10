@@ -231,23 +231,20 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 
 	return (
 		<>
-			<div className="absolute top-0 left-0 right-0 p-4 bg-white z-10">
-				<button
-					className="p-1 bg-transparent border-none cursor-pointer z-40 hover:bg-gray-100 transition-colors duration-200 rounded"
-					onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-				>
-					<Menu className="h-6 w-6" />
-				</button>
-			</div>
-
 			<Sidebar
 				epubContent={epubContent}
 				isOpen={isSidebarOpen}
 				onClose={() => setIsSidebarOpen(false)}
 			/>
 
-			<div className="h-full overflow-y-auto">
-				<div className="max-w-3xl mx-auto pt-20 px-6" ref={contentRef}>
+			<div className="h-full overflow-y-auto relative">
+				<button
+					className="sticky top-4 left-4 p-1 bg-transparent border-none cursor-pointer z-40 hover:bg-gray-100 transition-colors duration-200 rounded"
+					onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+				>
+					<Menu className="h-6 w-6" />
+				</button>
+				<div className="max-w-3xl mx-auto  px-6" ref={contentRef}>
 					{chapters?.map((chapter) => (
 						<Chapter
 							key={chapter.id}
