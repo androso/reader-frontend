@@ -193,12 +193,12 @@ export const useChapterLoader = (
 				const loadedChapters = await Promise.all(chapterPromises);
 				// when book = beginning of infinity then we only render one chapter
 				// just for now
-				const validChapters = loadedChapters.filter(
-					(ch, i): ch is Chapter => i == 5 || i === 4,
-				);
 				// const validChapters = loadedChapters.filter(
-				// 	(ch): ch is Chapter => ch !== null,
+				// 	(ch, i): ch is Chapter => i == 5 || i === 4,
 				// );
+				const validChapters = loadedChapters.filter(
+					(ch): ch is Chapter => ch !== null,
+				);
 
 				setChapters(validChapters);
 				const flatTextBlocks = validChapters.flatMap((chapter) => chapter.textBlocks);
