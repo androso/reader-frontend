@@ -20,7 +20,7 @@ export const useChapterLoader = (
 	const [chapters, setChapters] = useState<Chapter[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-
+	const [flatTextBlocks, setFlatTextBlocks] = useState<TextBlock[]>([]);
 	const loadCssContent = useCallback(
 		async (href: string, currentPath?: string): Promise<string | null> => {
 			if (!epubContent || !zipData) return null;
@@ -194,13 +194,15 @@ export const useChapterLoader = (
 				// when book = beginning of infinity then we only render one chapter
 				// just for now
 				const validChapters = loadedChapters.filter(
-					(ch, i): ch is Chapter => i == 5,
+					(ch, i): ch is Chapter => i == 5 || i === 4,
 				);
 				// const validChapters = loadedChapters.filter(
 				// 	(ch): ch is Chapter => ch !== null,
 				// );
 
 				setChapters(validChapters);
+				const flatTextBlocks = validChapters.flatMap((chapter) => chapter.textBlocks);
+				setFlatTextBlocks(flatTextBlocks);
 				// setChapters(validChapters[6]);
 			} catch (err) {
 				setError(
@@ -219,5 +221,6 @@ export const useChapterLoader = (
 		isLoading,
 		error,
 		loadAllChapters,
+		flatTextBlocks,
 	};
 };
