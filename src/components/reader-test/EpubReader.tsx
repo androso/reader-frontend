@@ -1,42 +1,51 @@
 import React, { useEffect, useRef, memo } from "react";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
-import { Chapter, useChapterLoader } from "./useChapterLoader";
-import { useReadingProgress } from "@/hooks/useReadingProgress";
+import { useChapterLoader } from "./useChapterLoader";
+// import { useReadingProgress } from "@/hooks/useReadingProgress";
 
 interface EpubReaderProps {
 	url: string;
 }
 
-const ChapterContent = memo(
-	({ chapter, index }: { chapter: Chapter; index: number }) => (
-		<div
-			id={`${chapter.hrefId}`}
-			key={chapter.id}
-			dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
-		/>
-	),
-);
+// const ChapterContent = memo(
+// 	({ chapter, index }: { chapter: Chapter; index: number }) => (
+// 		<div
+// 			id={`${chapter.hrefId}`}
+// 			key={chapter.id}
+// 			dangerouslySetInnerHTML={{ __html: chapter.element.innerHTML }}
+// 		/>
+// 	),
+// );
 
 const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const { processEpub, isLoading, error, epubContent, zipData } =
 		useEpubProcessor();
 	const contentRef = useRef<HTMLDivElement>(null);
-	const { chapters, loadAllChapters } = useChapterLoader(
+	const { chapters, loadAllChapters, flatTextBlocks } = useChapterLoader(
 		epubContent,
 		zipData,
 	);
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-	const bookId = url.split("/").pop()!;
+	// const bookId = url.split("/").pop()!;
 	// const progress = useReadingProgress(contentRef, bookId);
 	const [activeTextblockId, setActiveTextblockId] = React.useState<
 		string | null
 	>(null);
+
 	useEffect(() => {
-		console.log({ chapters });
-	}, [chapters]);
+		if (!activeTextblockId) {
+			if (flatTextBlocks.length > 0) {
+				setActiveTextblockId(flatTextBlocks[0].id);
+			}
+		}
+	}, [flatTextBlocks]);
+
+	useEffect(() => {
+		console.log({ flatTextBlocks });
+	}, [flatTextBlocks]);
 
 	useEffect(() => {
 		processEpub(url);
@@ -50,19 +59,40 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 
 	// Handle keyboard navigation
 	useEffect(() => {
+		if (!flatTextBlocks) return
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "ArrowDown") {
 				e.preventDefault();
 				// get id of the next textblock and update state
-				
+				const currTextBlockIndex = flatTextBlocks.findIndex(
+					(block) => block.id === activeTextblockId,
+				);
+				if (currTextBlockIndex != flatTextBlocks.length - 1) {
+					const nextTextBlock = flatTextBlocks[currTextBlockIndex + 1];
+					setActiveTextblockId(
+						nextTextBlock.id,
+					);
+				}
 			} else if (e.key == "ArrowUp") {
 				e.preventDefault();
 				// get id of the previous textblock and update state
+				const currTextBlockIndex = flatTextBlocks.findIndex(
+					(block) => block.id === activeTextblockId,
+				);
+				if (currTextBlockIndex != 0) {
+					const prevTextBlock =
+						flatTextBlocks[currTextBlockIndex - 1];
+					setActiveTextblockId(prevTextBlock.id);
+				}
 			}
-		}
-	}, [])
+		};
+		
+		document.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [flatTextBlocks, activeTextblockId]);
 
-	
 	if (isLoading) {
 		return (
 			<div className="loading-spinner">
@@ -129,11 +159,6 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 							</div>
 						);
 					})}
-					{/*
-						<Chapter>
-							<TextBlock />
-						</Chapter>
-					*/}
 				</div>
 			</div>
 		</>
