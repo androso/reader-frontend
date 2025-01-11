@@ -3,6 +3,7 @@ import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
 import { useChapterLoader } from "./useChapterLoader";
+import { useTextBlockNavigation } from "@/hooks/useTextBlockNavigation";
 
 interface EpubReaderProps {
 	url: string;
@@ -61,92 +62,16 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const { processEpub, isLoading, error, epubContent, zipData } =
 		useEpubProcessor();
 	const contentRef = useRef<HTMLDivElement>(null);
-	const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 	const { chapters, loadAllChapters, flatTextBlocks } = useChapterLoader(
 		epubContent,
 		zipData
 	);
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-	const [activeTextblockId, setActiveTextblockId] = React.useState<
-		string | null
-	>(null);
-	const [isManualScroll, setIsManualScroll] = React.useState(false);
 
-	// Calculate element visibility in viewport
-	const getVisibilityRatio = useCallback((element: HTMLElement) => {
-		const rect = element.getBoundingClientRect();
-		const windowHeight = window.innerHeight;
-
-		// If element is not in viewport at all
-		if (rect.bottom < 0 || rect.top > windowHeight) {
-			return 0;
-		}
-
-		// Calculate the visible height of the element
-		const visibleHeight =
-			Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0);
-		const ratio = visibleHeight / rect.height;
-
-		return Math.max(0, Math.min(1, ratio));
-	}, []);
-
-	// Find the most visible text block
-	const findMostVisibleBlock = useCallback(() => {
-		if (!flatTextBlocks) return null;
-
-		let maxVisibility = 0;
-		let mostVisibleId = null;
-
-		for (const block of flatTextBlocks) {
-			const element = document.getElementById(block.id);
-			if (element) {
-				const visibility = getVisibilityRatio(element);
-				if (visibility > maxVisibility) {
-					maxVisibility = visibility;
-					mostVisibleId = block.id;
-				}
-			}
-		}
-
-		return mostVisibleId;
-	}, [flatTextBlocks, getVisibilityRatio]);
-
-	const saveProgress = (textBlockId: string) => {
-		// store in local storage the id along with the book and chapter so that it is better recognizable
-		const bookId = window.location.pathname.split("/")[2];
-		localStorage.setItem(`book-progress-${bookId}`, textBlockId);
-	};
-
-	// Handle scroll events
-	const handleScroll = useCallback(() => {
-		if (!isManualScroll) {
-			// Clear existing timeout
-			if (scrollTimeout.current !== null) {
-				clearTimeout(scrollTimeout.current);
-			}
-
-			// Set a new timeout
-			scrollTimeout.current = setTimeout(() => {
-				const mostVisibleId = findMostVisibleBlock();
-				if (mostVisibleId && mostVisibleId !== activeTextblockId) {
-					setActiveTextblockId(mostVisibleId);
-					saveProgress(mostVisibleId);
-				}
-			}, 1000); // Debounce scroll events
-		}
-	}, [findMostVisibleBlock, activeTextblockId, isManualScroll]);
-
-	useEffect(() => {
-		if (!activeTextblockId && flatTextBlocks.length > 0) {
-			const bookId = window.location.pathname.split("/")[2];
-			const storedId = localStorage.getItem(`book-progress-${bookId}`);
-			setActiveTextblockId(storedId || flatTextBlocks[0].id);
-			const element = document.getElementById(storedId || flatTextBlocks[0].id);
-			if (element) {
-				element.scrollIntoView({ behavior: "smooth", block: "center" });
-			}
-		}
-	}, [flatTextBlocks]);
+	const { activeTextBlockId } = useTextBlockNavigation(
+		flatTextBlocks,
+		contentRef
+	);
 
 	useEffect(() => {
 		processEpub(url);
@@ -157,60 +82,6 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 			loadAllChapters();
 		}
 	}, [epubContent, zipData, loadAllChapters]);
-
-	// Set up scroll listener
-	useEffect(() => {
-		const container = contentRef.current?.parentElement;
-		if (container) {
-			container.addEventListener("scroll", handleScroll);
-			return () => {
-				container.removeEventListener("scroll", handleScroll);
-				if (scrollTimeout.current) {
-					clearTimeout(scrollTimeout.current);
-				}
-			};
-		}
-	}, [handleScroll]);
-
-	// Handle keyboard navigation
-	useEffect(() => {
-		if (!flatTextBlocks) return;
-
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-				e.preventDefault();
-				setIsManualScroll(true);
-
-				const currTextBlockIndex = flatTextBlocks.findIndex(
-					(block) => block.id === activeTextblockId
-				);
-
-				const newIndex =
-					e.key === "ArrowDown"
-						? Math.min(currTextBlockIndex + 1, flatTextBlocks.length - 1)
-						: Math.max(currTextBlockIndex - 1, 0);
-
-				if (newIndex !== currTextBlockIndex) {
-					const targetBlock = flatTextBlocks[newIndex];
-					setActiveTextblockId(targetBlock.id);
-
-					// Scroll the active block into view
-					document.getElementById(targetBlock.id)?.scrollIntoView({
-						behavior: "smooth",
-						block: "center",
-					});
-				}
-
-				// Reset manual scroll after animation completes
-				setTimeout(() => {
-					setIsManualScroll(false);
-				}, 1000); // Should match scroll-behavior: smooth duration
-			}
-		};
-
-		document.addEventListener("keydown", handleKeyDown);
-		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [flatTextBlocks, activeTextblockId]);
 
 	if (isLoading) {
 		return (
@@ -231,28 +102,32 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 
 	return (
 		<>
+
 			<Sidebar
 				epubContent={epubContent}
 				isOpen={isSidebarOpen}
 				onClose={() => setIsSidebarOpen(false)}
 			/>
 
-			<div className="h-full overflow-y-auto relative">
-				<button
-					className="sticky top-4 left-4 p-1 bg-transparent border-none cursor-pointer z-40 hover:bg-gray-100 transition-colors duration-200 rounded"
-					onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-				>
-					<Menu className="h-6 w-6" />
-				</button>
-				<div className="max-w-3xl mx-auto  px-6" ref={contentRef}>
-					{chapters?.map((chapter) => (
-						<Chapter
-							key={chapter.id}
-							chapter={chapter}
-							// activeTextblockId={activeTextblockId}
-							activeTextblockId={""}
-						/>
-					))}
+			<div className="h-full  relative">
+				<div className="sticky top-0 left-0 right-0 p-4 bg-white z-10 h-[8%]">
+					<button
+						className="p-1 bg-transparent border-none cursor-pointer z-40 hover:bg-gray-100 transition-colors duration-200 rounded"
+						onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+					>
+						<Menu className="h-6 w-6" />
+					</button>
+				</div>
+				<div className="max-w-3xl mx-auto  px-6 max-h-[92%] overflow-y-auto">
+					<div className="" ref={contentRef}>
+						{chapters?.map((chapter) => (
+							<Chapter
+								key={chapter.id}
+								chapter={chapter}
+								activeTextblockId={activeTextBlockId}
+							/>
+						))}
+					</div>
 				</div>
 			</div>
 		</>
