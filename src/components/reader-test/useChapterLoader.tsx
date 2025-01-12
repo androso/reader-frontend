@@ -21,6 +21,9 @@ export const useChapterLoader = (
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [flatTextBlocks, setFlatTextBlocks] = useState<TextBlock[]>([]);
+
+	
+	
 	const loadCssContent = useCallback(
 		async (href: string, currentPath?: string): Promise<string | null> => {
 			if (!epubContent || !zipData) return null;
