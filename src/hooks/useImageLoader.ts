@@ -21,11 +21,7 @@ export const useImageLoader = (zipData: JSZip | null, basePath: string) => {
 		}
 
 		const arrayBuffer = await imageFile.async("arraybuffer");
-		const bytes = new Uint8Array(arrayBuffer);
-		const binary = bytes.reduce(
-			(data, byte) => data + String.fromCharCode(byte),
-			""
-		);
+		const binary =  new  TextDecoder().decode(arrayBuffer);
 		const base64 = btoa(binary);
 		const extension = imagePath.split(".").pop()?.toLowerCase();
 		const mimeType =
