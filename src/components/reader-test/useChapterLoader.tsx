@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useReducer } from "react";
 import JSZip from "jszip";
 import { TextBlock, type EpubContent } from "@/types/EpubReader";
 import { useImageLoader } from "@/hooks/useImageLoader";
@@ -12,18 +12,61 @@ export interface Chapter {
 	textBlocks: TextBlock[];
 }
 
+interface ChapterLoaderState {
+	chapters: Chapter[];
+	isLoading: boolean;
+	error: string | null;
+	flatTextBlocks: TextBlock[];
+}
+
+type ChapterAction =
+	| { type: "START_LOADING" }
+	| {
+			type: "LOAD_SUCCESS";
+			payload: { chapters: Chapter[]; flatTextBlocks: TextBlock[] };
+	  }
+	| { type: "LOAD_ERROR"; payload: string };
+
+function chapterReducer(
+	state: ChapterLoaderState,
+	action: ChapterAction,
+): ChapterLoaderState {
+	switch (action.type) {
+		case "START_LOADING":
+			return {
+				...state,
+				isLoading: true,
+				error: null,
+			};
+		case "LOAD_SUCCESS":
+			return {
+				...state,
+				chapters: action.payload.chapters,
+				isLoading: false,
+				flatTextBlocks: action.payload.flatTextBlocks,
+				error: null,
+			};
+		case "LOAD_ERROR":
+			return {
+				...state,
+				error: action.payload,
+				isLoading: false,
+			};
+	}
+}
+
 export const useChapterLoader = (
 	epubContent: EpubContent | null,
 	zipData: JSZip | null,
 ) => {
 	const { loadImage } = useImageLoader(zipData, epubContent?.basePath ?? "");
-	const [chapters, setChapters] = useState<Chapter[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [flatTextBlocks, setFlatTextBlocks] = useState<TextBlock[]>([]);
+	const [state, dispatch] = useReducer(chapterReducer, {
+		chapters: [],
+		isLoading: false,
+		error: null,
+		flatTextBlocks: [],
+	});
 
-	
-	
 	const loadCssContent = useCallback(
 		async (href: string, currentPath?: string): Promise<string | null> => {
 			if (!epubContent || !zipData) return null;
@@ -129,7 +172,6 @@ export const useChapterLoader = (
 				});
 			});
 
-			// return doc.body;
 			return textBlocks;
 		},
 		[epubContent, loadImage, loadCssContent],
@@ -183,47 +225,52 @@ export const useChapterLoader = (
 
 	const loadAllChapters = useCallback(async () => {
 		if (!epubContent) {
-			setError("No EPUB content available");
+			dispatch({
+				type: "LOAD_ERROR",
+				payload: "No EPUB content available",
+			});
 			return;
 		}
 
-		if (!chapters.length) {
-			setIsLoading(true);
+		if (!state.chapters.length) {
+			dispatch({ type: "START_LOADING" });
 			try {
 				const chapterPromises = epubContent.spine.map((id) =>
 					loadChapter(id),
 				);
 				const loadedChapters = await Promise.all(chapterPromises);
-				// when book = beginning of infinity then we only render one chapter
-				// just for now
-				// const validChapters = loadedChapters.filter(
-				// 	(ch, i): ch is Chapter => i == 5 || i === 4,
-				// );
 				const validChapters = loadedChapters.filter(
 					(ch): ch is Chapter => ch !== null,
 				);
 
-				setChapters(validChapters);
-				const flatTextBlocks = validChapters.flatMap((chapter) => chapter.textBlocks);
-				setFlatTextBlocks(flatTextBlocks);
-				// setChapters(validChapters[6]);
-			} catch (err) {
-				setError(
-					err instanceof Error
-						? err.message
-						: "Failed to load chapters",
+				const flatTextBlocks = validChapters.flatMap(
+					(chapter) => chapter.textBlocks,
 				);
-			} finally {
-				setIsLoading(false);
+
+				dispatch({
+					type: "LOAD_SUCCESS",
+					payload: {
+						chapters: validChapters,
+						flatTextBlocks,
+					},
+				});
+			} catch (err) {
+				dispatch({
+					type: "LOAD_ERROR",
+					payload:
+						err instanceof Error
+							? err.message
+							: "Failed to load chapters",
+				});
 			}
 		}
-	}, [epubContent, loadChapter, chapters.length]);
+	}, [epubContent, loadChapter, state.chapters.length]);
 
 	return {
-		chapters,
-		isLoading,
-		error,
+		chapters: state.chapters,
+		isLoading: state.isLoading,
+		error: state.error,
 		loadAllChapters,
-		flatTextBlocks,
+		flatTextBlocks: state.flatTextBlocks,
 	};
 };
