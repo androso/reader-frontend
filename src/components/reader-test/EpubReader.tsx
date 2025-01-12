@@ -113,7 +113,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 			<div className="h-full  relative">
 				<div className="sticky top-0 left-0 right-0 p-4 bg-white z-10 h-[8%]">
 					<button
-						className="p-1 bg-transparent border-none cursor-pointer z-40 hover:bg-gray-100 transition-colors duration-200 rounded"
+						className="bg-transparent border-none cursor-pointer z-40 hover:bg-gray-100 transition-colors duration-200 rounded"
 						onClick={() => setIsSidebarOpen(!isSidebarOpen)}
 					>
 						<Menu className="h-6 w-6" />
