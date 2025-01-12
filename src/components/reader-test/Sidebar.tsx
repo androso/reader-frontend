@@ -89,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = memo(
 
 		return (
 			<div
-				className={`absolute h-full overflow-x-hidden top-0 pt-12  left-0 bg-white border-r shadow-lg transition-transform duration-300 ease-in-out transform z-30 ${
+				className={`absolute h-full overflow-x-hidden top-12   left-0 bg-white border-r shadow-lg transition-transform duration-300 ease-in-out transform z-30 ${
 					isOpen ? "translate-x-0" : "-translate-x-full"
 				}`}
 			>
