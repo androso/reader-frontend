@@ -7,7 +7,6 @@ import { resolveRelativePath } from "@/lib/utils";
 export interface Chapter {
 	id: string;
 	content: string;
-	// element: HTMLElement;
 	hrefId: string;
 	textBlocks: TextBlock[];
 }
