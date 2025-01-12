@@ -51,15 +51,5 @@ export const useImageLoader = (zipData: JSZip | null, basePath: string) => {
 		return dataUrl;
 	};
 
-	useEffect(() => {
-		return () => {
-			Object.values(imageResources).forEach((resource) => {
-				if (resource.blobUrl.startsWith("blob:")) {
-					URL.revokeObjectURL(resource.blobUrl);
-				}
-			});
-		};
-	}, []);
-
 	return { loadImage, imageResources };
 };

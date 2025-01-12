@@ -29,7 +29,7 @@ const TextBlock = memo(
 			}`}
 			dangerouslySetInnerHTML={{ __html: content }}
 		/>
-	)
+	),
 );
 
 TextBlock.displayName = "TextBlock";
@@ -53,7 +53,7 @@ const Chapter = memo(
 				/>
 			))}
 		</div>
-	)
+	),
 );
 
 Chapter.displayName = "Chapter";
@@ -64,13 +64,13 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 	const contentRef = useRef<HTMLDivElement>(null);
 	const { chapters, loadAllChapters, flatTextBlocks } = useChapterLoader(
 		epubContent,
-		zipData
+		zipData,
 	);
 	const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
 	const { activeTextBlockId } = useTextBlockNavigation(
 		flatTextBlocks,
-		contentRef
+		contentRef,
 	);
 
 	useEffect(() => {
@@ -87,7 +87,9 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 		return (
 			<div className="loading-spinner">
 				<div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-r-blue-500 border-b-transparent border-l-transparent" />
-				<div className="mt-4 text-lg text-gray-600">Loading book...</div>
+				<div className="mt-4 text-lg text-gray-600">
+					Loading book...
+				</div>
 			</div>
 		);
 	}
@@ -102,7 +104,6 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
 
 	return (
 		<>
-
 			<Sidebar
 				epubContent={epubContent}
 				isOpen={isSidebarOpen}
