@@ -19,9 +19,12 @@ export const useImageLoader = (zipData: JSZip | null, basePath: string) => {
 		if (!imageFile) {
 			throw new Error(`Image file not found: ${imagePath}`);
 		}
-
 		const arrayBuffer = await imageFile.async("arraybuffer");
-		const binary =  new  TextDecoder().decode(arrayBuffer);
+		const bytes = new Uint8Array(arrayBuffer);
+		const binary = bytes.reduce(
+			(data, byte) => data + String.fromCharCode(byte),
+			""
+		);
 		const base64 = btoa(binary);
 		const extension = imagePath.split(".").pop()?.toLowerCase();
 		const mimeType =
