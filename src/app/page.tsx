@@ -9,8 +9,9 @@ import { Icon } from "@iconify/react";
 import { deleteBook } from "@/actions/bookActions";
 import toast from "react-hot-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AuthProtection } from "@/components/AuthProtection";
 
-export default function Page() {
+function Home() {
 	const router = useRouter();
 	const [hoveredBookId, setHoveredBookId] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
@@ -92,7 +93,6 @@ export default function Page() {
 		},
 	});
 
-
 	// useEffect(() => {
 	// 	if (isLoading == false) {
 	// 		if (isAuthenticated == false) {
@@ -121,10 +121,13 @@ export default function Page() {
 						onUpload={handleFileUpload}
 						isLoading={isUploading}
 					/>
-					<button className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700" onClick={() => {
-						signOut();
-						router.push("/login");	
-					}}>
+					<button
+						className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+						onClick={() => {
+							signOut();
+							router.push("/login");
+						}}
+					>
 						Logout
 					</button>
 				</div>
@@ -163,5 +166,13 @@ export default function Page() {
 				</div>
 			</ScrollArea>
 		</div>
+	);
+}
+
+export default function Page() {
+	return (
+		<AuthProtection>
+			<Home />
+		</AuthProtection>
 	);
 }

@@ -5,6 +5,7 @@ import { useGoogleSignIn, useUser } from "@/lib/auth";
 import { useGoogleLogin } from "@react-oauth/google";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useEffect } from "react";
 
 export default function Login() {
 	const router = useRouter();
@@ -20,7 +21,13 @@ export default function Login() {
 			console.error("Login Failed:", error);
 		},
 	});
-
+	
+	useEffect(() => {
+		if (userStatus == "success" && userData) {
+			router.push("/");
+		}	
+	}, [userStatus, userData])
+	
 	// Show loading state while redirecting
 	if (userStatus == "pending" && (googlePending || googleStatus == "success")) {
 		return <LoadingSpinner />;
