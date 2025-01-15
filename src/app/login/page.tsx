@@ -11,11 +11,6 @@ export default function Login() {
 	const { data: userData, status: userStatus } = useUser();
 	const { mutateAsync: signIn, isPending: googlePending, status: googleStatus } = useGoogleSignIn();
 
-	// useEffect(() => {
-	// 	if (userData) {
-	// 		router.push("/");
-	// 	}
-	// }, [userData, router]);
 	const login = useGoogleLogin({
 		onSuccess: async (codeResponse) => {
 			await signIn(codeResponse.access_token);
