@@ -58,7 +58,9 @@ function Home() {
 			return response.json();
 		},
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+			queryClient.invalidateQueries({
+				queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/books`],
+			});
 			toast.success("File uploaded successfully");
 		},
 		onError: () => {
