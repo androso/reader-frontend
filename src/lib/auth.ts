@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "./queryClient";
 
@@ -10,18 +9,11 @@ export interface User {
 }
 
 export function useUser() {
-	const [hasToken, setHasToken] = useState(false);
-
-	useEffect(() => {
-		if (localStorage.getItem("token")) {
-			setHasToken(true);
-		}
-	}, []);
-	
 	return useQuery({
 		queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
 		queryFn: async () => {
 			const token = localStorage.getItem("token");
+			if (!token) return null;
 			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -32,7 +24,7 @@ export function useUser() {
 			}
 			return response.json();
 		},
-		enabled: hasToken,
+		enabled: true,
 		retry: false,
 	});
 }
@@ -54,7 +46,6 @@ export function useGoogleSignIn() {
 
 			const data = await res.json();
 			localStorage.setItem("token", data.token);
-			console.log({data})
 			return data;
 		},
 		onSuccess: () => {
