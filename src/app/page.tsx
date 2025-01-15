@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/FileUpload";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useGoogleSignIn, useUser } from "@/lib/auth";
+import { useGoogleSignIn, useUser, signOut } from "@/lib/auth";
 import { Icon } from "@iconify/react";
 import { deleteBook } from "@/actions/bookActions";
 import toast from "react-hot-toast";
@@ -121,10 +121,18 @@ export default function Page() {
 		<div className="container mx-auto p-8">
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-3xl font-semibold">Library</h1>
-				<FileUpload
-					onUpload={handleFileUpload}
-					isLoading={isUploading}
-				/>
+				<div className="flex items-center gap-4">
+					<FileUpload
+						onUpload={handleFileUpload}
+						isLoading={isUploading}
+					/>
+					<button className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700" onClick={() => {
+						signOut();
+						router.push("/login");	
+					}}>
+						Logout
+					</button>
+				</div>
 			</div>
 
 			<ScrollArea className="h-[calc(100vh-12rem)]">

@@ -67,7 +67,5 @@ export function useGoogleSignIn() {
 
 export function signOut() {
 	localStorage.removeItem("token");
-	queryClient.invalidateQueries({
-		queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
-	});
+	queryClient.clear();
 }
