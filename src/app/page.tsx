@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/FileUpload";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useGoogleSignIn, useUser, signOut } from "@/lib/auth";
+import { signOut } from "@/lib/auth";
 import { Icon } from "@iconify/react";
 import { deleteBook } from "@/actions/bookActions";
 import toast from "react-hot-toast";
@@ -15,8 +15,6 @@ function Home() {
 	const router = useRouter();
 	const [hoveredBookId, setHoveredBookId] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
-	const { data: userData, isSuccess } = useUser();
-	const { mutate: signIn, isPending } = useGoogleSignIn();
 	const { data: booksData } = useQuery({
 		queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/books`],
 		queryFn: async () => {
@@ -92,25 +90,6 @@ function Home() {
 			toast.error(err.message);
 		},
 	});
-
-	// useEffect(() => {
-	// 	if (isLoading == false) {
-	// 		if (isAuthenticated == false) {
-	// 			router.push("/login");
-	// 		}
-	// 		console.log({ isLoading, isAuthenticated });
-	// 	} else {
-	// 		console.log("loading", { isLoading, isAuthenticated });
-	// 	}
-	// }, [isAuthenticated, isLoading]);
-
-	if (isPending) {
-		return "...";
-	}
-
-	// if (!isAuthenticated) {
-	// 	return null;
-	// }
 
 	return (
 		<div className="container mx-auto p-8">
