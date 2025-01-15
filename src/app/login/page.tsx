@@ -5,22 +5,29 @@ import { useEffect } from "react";
 import { useGoogleSignIn, useUser } from "@/lib/auth";
 import { useGoogleLogin } from "@react-oauth/google";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function Login() {
 	const router = useRouter();
-	const { data: userData, isSuccess, isPending, error, isError } = useUser();
-	const { mutate: signIn, isPending: googlePending, data } = useGoogleSignIn();
+	const { data: userData, status } = useUser();
+	const {
+		mutateAsync: signIn,
+		isPending: googlePending,
+		data,
+		status: googleStatus,
+	} = useGoogleSignIn();
 
 	useEffect(() => {
-		if (data?.user || userData) {
+		if (userData) {
 			console.log("user is logged in");
 			router.push("/");
 		}
-	}, [userData, data]);
+	}, [userData]);
 
 	const login = useGoogleLogin({
-		onSuccess: (codeResponse) => {
-			signIn(codeResponse.access_token);
+		onSuccess: async (codeResponse) => {
+			await signIn(codeResponse.access_token);
+			router.push("/");
 		},
 		onError: (error) => {
 			console.error("Login Failed:", error);
@@ -28,12 +35,8 @@ export default function Login() {
 	});
 
 	// Show loading state while redirecting
-	if (userData || data?.user || googlePending) {
-		return (
-			<div className="h-screen flex items-center justify-center">
-				<p>...</p>
-			</div>
-		);
+	if (status == "pending" && googleStatus == "pending") {
+		return <LoadingSpinner />;
 	}
 
 	return (
