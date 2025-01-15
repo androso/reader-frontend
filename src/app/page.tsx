@@ -91,12 +91,7 @@ export default function Page() {
 			toast.error(err.message);
 		},
 	});
-	useEffect(() => {
-		if (!isSuccess && !userData) {
-			// setLocation("/profile");
-			router.push("/login");
-		}
-	}, [isSuccess, userData, router.push]);
+
 
 	// useEffect(() => {
 	// 	if (isLoading == false) {
