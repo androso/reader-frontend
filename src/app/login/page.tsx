@@ -9,25 +9,21 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function Login() {
 	const router = useRouter();
-	const { data: userData, status } = useUser();
+	const { data: userData, status: userStatus } = useUser();
 	const {
 		mutateAsync: signIn,
 		isPending: googlePending,
-		data,
-		status: googleStatus,
 	} = useGoogleSignIn();
 
 	useEffect(() => {
 		if (userData) {
-			console.log("user is logged in");
 			router.push("/");
 		}
-	}, [userData]);
+	}, [userData, router]);
 
 	const login = useGoogleLogin({
 		onSuccess: async (codeResponse) => {
 			await signIn(codeResponse.access_token);
-			router.push("/");
 		},
 		onError: (error) => {
 			console.error("Login Failed:", error);
@@ -35,7 +31,7 @@ export default function Login() {
 	});
 
 	// Show loading state while redirecting
-	if (status == "pending" && googleStatus == "pending") {
+	if (userStatus == "pending" && googlePending) {
 		return <LoadingSpinner />;
 	}
 
