@@ -74,12 +74,22 @@ function Home() {
 			onSettled: () => setIsUploading(false),
 		});
 	};
-
+	// should be invalidating query on success
 	const { mutate: deleteItem } = useMutation({
 		mutationFn: async (itemId: string) => {
-			const response = await deleteBook(itemId);
-			if (!response.success) {
-				throw new Error(response.message);
+			// const response = await deleteBook(itemId);
+			const token = localStorage.getItem("token");
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/books/${itemId}`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+					method: "DELETE",
+				},
+			)
+			if (!response.ok) {
+				throw new Error("Failed deleting file");
 			}
 
 			return response;
