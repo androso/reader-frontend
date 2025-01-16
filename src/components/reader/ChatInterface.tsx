@@ -26,11 +26,11 @@ const MessageList = memo(({ messages }: { messages: any }) => (
 
 MessageList.displayName = "MessageList";
 
-export function ChatInterface() {
+export function ChatInterface({ floating = false}: {floating?: boolean}) {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   
   return (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col h-full  ${floating && "absolute bottom-2 w-11/12 !h-[40%] left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 rounded-md border-2 border-slate-300"} shadow-lg  bg-white`}>
       <MessageList messages={messages} />
       <form 
         onSubmit={handleSubmit}
