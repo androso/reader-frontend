@@ -5,10 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SendHorizontal } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 
-const MessageList = memo(({ messages }: { messages: any }) => (
-  <ScrollArea className="flex-1 p-4">
+const MessageList = memo(({ messages, setOpen }: { messages: any, setOpen: (state:boolean) => void }) => (
+  <>
+    <div className="flex justify-end p-2 border-b">
+      <button
+         onClick={() => setOpen(false)} 
+        className="text-gray-500 hover:text-gray-700"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+      </button>
+    </div>
+  <ScrollArea className="h-[263px] p-4">
     {messages.map((message: any) => (
       <div
         key={message.id}
@@ -22,18 +34,27 @@ const MessageList = memo(({ messages }: { messages: any }) => (
       </div>
     ))}
   </ScrollArea>
+    </>
 ));
 
 MessageList.displayName = "MessageList";
 
 export function ChatInterface({ floating = false}: {floating?: boolean}) {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
+  const [isOpen, setIsOpen] = useState(false);
+  const handleSubmitForm = (e: React.FormEvent) => {
+     handleSubmit(e);
+    setIsOpen(true);
+  } 
   
   return (
-    <div className={`flex flex-col h-full  ${floating && "absolute bottom-2 w-11/12 !h-[40%] left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 rounded-md border-2 border-slate-300"} shadow-lg  bg-white`}>
-      <MessageList messages={messages} />
+    
+    <div className={`flex flex-col   ${floating && "absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 rounded-md border-2 border-slate-300"} shadow-lg  bg-white`}>
+      {isOpen && (
+        <MessageList messages={messages} setOpen={setIsOpen} />
+      )}
       <form 
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmitForm}
         className="border-t border-gray-200 p-4"
       >
         <div className="flex gap-2">
