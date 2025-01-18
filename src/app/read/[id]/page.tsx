@@ -16,7 +16,7 @@ export default function Reader() {
 			<div className={`h-screen w-full rounded-lg relative flex justify-center ${!isMobile && "p-8"}`}>
 				{!isMobile && (
 					<div className="w-[40%] bg-[#FCFCFC] mr-4 rounded-lg">
-						<ChatInterface />
+						<ChatInterface isMobile={false} />
 					</div>
 				)}
 				{isMobile ? (
@@ -26,7 +26,7 @@ export default function Reader() {
 						<EpubReader
 							url={`${process.env.NEXT_PUBLIC_API_URL}/api/books/${bookId}`}
 						/>
-						<ChatInterface floating={true} />
+						<ChatInterface isMobile={true} />
 					</div>
 				) : (
 					<div
