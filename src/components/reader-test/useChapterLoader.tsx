@@ -250,9 +250,8 @@ export const useChapterLoader = (
 			});
 			return;
 		}
-		// why are we loading all chapters so many times?
-		console.log("loading all chapters")
-		if (!state.chapters.length) {
+		
+		if (!state.chapters.length && !state.isLoading) {
 			dispatch({ type: "START_LOADING" });
 			try {
 				const chapterPromises = epubContent.spine.map((id) =>
