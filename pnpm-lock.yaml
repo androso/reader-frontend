@@ -125,9 +125,6 @@ importers:
       epubjs:
         specifier: ^0.3.93
         version: 0.3.93
-      husky:
-        specifier: ^9.1.7
-        version: 9.1.7
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -192,6 +189,9 @@ importers:
       eslint-config-next:
         specifier: 15.1.0
         version: 15.1.0(eslint@9.17.0(jiti@1.21.6))(typescript@5.7.2)
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
       lint-staged:
         specifier: ^15.4.1
         version: 15.4.1
