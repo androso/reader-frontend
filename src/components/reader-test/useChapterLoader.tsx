@@ -1,4 +1,4 @@
-import { useState, useCallback, useReducer } from "react";
+import { useState, useCallback, useReducer, useEffect } from "react";
 import JSZip from "jszip";
 import { TextBlock, type EpubContent } from "@/types/EpubReader";
 import { useImageLoader } from "@/hooks/useImageLoader";
@@ -66,6 +66,10 @@ export const useChapterLoader = (
 		flatTextBlocks: [],
 	});
 
+	useEffect(() => {
+		console.log({ epubContent });
+	}, [epubContent]);
+
 	const loadCssContent = useCallback(
 		async (href: string, currentPath?: string): Promise<string | null> => {
 			if (!epubContent || !zipData) return null;
@@ -132,6 +136,7 @@ export const useChapterLoader = (
 			const imagePromises = Array.from(doc.querySelectorAll("img")).map(
 				async (img) => {
 					const src = img.getAttribute("src");
+
 					if (
 						src &&
 						!src.startsWith("blob:") &&
@@ -142,8 +147,18 @@ export const useChapterLoader = (
 								src,
 								epubContent.basePath,
 							);
-							img.setAttribute("data-original-src", resolvedPath);
-							const dataUrl = await loadImage(resolvedPath);
+							
+							const manifestItem = Object.values(
+								epubContent.manifest,
+							).find((item) => item.href.includes(resolvedPath));
+
+							img.setAttribute(
+								"data-original-src",
+								manifestItem?.href as string,
+							);
+							const dataUrl = await loadImage(
+								manifestItem?.href as string,
+							);
 							img.src = dataUrl;
 						} catch (error) {
 							img.src =
@@ -154,8 +169,12 @@ export const useChapterLoader = (
 				},
 			);
 
-			await Promise.all(imagePromises);
-			doc.querySelectorAll("script").forEach((script) => script.remove());
+            // const start = performance.now();
+            await Promise.all(imagePromises);
+            // const end = performance.now();
+            // const durationInSeconds = ((end - start) / 1000).toFixed(2);
+            // console.log(`Image promises took ${durationInSeconds} seconds to complete.`);
+            doc.querySelectorAll("script").forEach((script) => script.remove());
 
 			const textBlocks: TextBlock[] = [];
 			Array.from(doc.body.children).forEach((child, idx) => {
@@ -180,6 +199,7 @@ export const useChapterLoader = (
 		async (id: string): Promise<Chapter | null> => {
 			if (!epubContent || !zipData) return null;
 			try {
+
 				const manifestItem = epubContent.manifest[id];
 				if (!manifestItem) {
 					throw new Error(`Manifest item not found for id: ${id}`);
@@ -230,7 +250,8 @@ export const useChapterLoader = (
 			});
 			return;
 		}
-
+		// why are we loading all chapters so many times?
+		console.log("loading all chapters")
 		if (!state.chapters.length) {
 			dispatch({ type: "START_LOADING" });
 			try {
