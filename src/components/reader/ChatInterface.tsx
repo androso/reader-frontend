@@ -255,6 +255,16 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                     className="border-t border-gray-200 p-4"
                 >
                     <div className="flex gap-2">
+                        {isMobile && (
+                            <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => setIsOpen(true)}
+                            >
+                                <Clock className="h-5 w-5" />
+                            </Button>
+                        )}
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
