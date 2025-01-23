@@ -1,9 +1,61 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SendHorizontal, Maximize2 } from "lucide-react";
+import { SendHorizontal, Maximize2, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { memo, useState } from "react";
+
+// Past conversations data
+const pastConversations = [
+    {
+        id: 1,
+        title: "Understanding Chapter 1",
+        date: "2024-01-10",
+        messages: [
+            {
+                role: "user",
+                content: "Can you explain the main theme of Chapter 1?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The main theme revolves around the concept of vertical progress versus horizontal progress in technology.",
+            },
+        ],
+    },
+    {
+        id: 2,
+        title: "Character Analysis",
+        date: "2024-01-09",
+        messages: [
+            {
+                role: "user",
+                content: "What are the key characteristics of the protagonist?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The protagonist shows strong leadership qualities and innovative thinking throughout the story.",
+            },
+        ],
+    },
+    {
+        id: 3,
+        title: "Plot Discussion",
+        date: "2024-01-08",
+        messages: [
+            {
+                role: "user",
+                content: "How does the plot develop in the middle chapters?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The plot intensifies as new challenges emerge, testing the characters' resolve.",
+            },
+        ],
+    },
+];
 
 const MessageList = memo(
     ({
@@ -81,6 +133,9 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
     const [input, setInput] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [selectedConversation, setSelectedConversation] = useState<
+        number | null
+    >(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -117,40 +172,78 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
     };
 
     return (
-        <div
-            className={`flex flex-col ${!isMobile && "h-full"} rounded-md ${
-                isMobile &&
-                `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
-                    isExpanded ? "h-[80dvh] bottom-[2.5vh]" : ""
-                }`
-            } shadow-lg bg-white`}
-        >
-            {isMobile && isOpen && (
-                <MessageList
-                    messages={messages}
-                    setOpen={setIsOpen}
-                    isMobile={true}
-                    isExpanded={isExpanded}
-                    onExpand={() => setIsExpanded(!isExpanded)}
-                />
-            )}
-            {!isMobile && <MessageList messages={messages} isMobile={false} />}
-            <form
-                onSubmit={handleSubmit}
-                className="border-t border-gray-200 p-4"
-            >
-                <div className="flex gap-2">
-                    <Input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask about this book..."
-                        className="flex-1"
-                    />
-                    <Button type="submit" size="icon" variant="ghost">
-                        <SendHorizontal className="h-5 w-5" />
-                    </Button>
+        <div className={`flex h-full`}>
+            {!isMobile && (
+                <div className="w-64 border-r border-gray-200 bg-gray-50">
+                    <div className="p-4 border-b border-gray-200">
+                        <h2 className="text-lg font-semibold">
+                            Past Conversations
+                        </h2>
+                    </div>
+                    <ScrollArea className="h-full">
+                        {pastConversations.map((conversation) => (
+                            <button
+                                key={conversation.id}
+                                onClick={() =>
+                                    setSelectedConversation(conversation.id)
+                                }
+                                className={`w-full p-4 text-left hover:bg-gray-100 border-b border-gray-200 ${
+                                    selectedConversation === conversation.id
+                                        ? "bg-gray-100"
+                                        : ""
+                                }`}
+                            >
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Clock className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm font-medium">
+                                        {conversation.title}
+                                    </span>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                    {conversation.date}
+                                </span>
+                            </button>
+                        ))}
+                    </ScrollArea>
                 </div>
-            </form>
+            )}
+            <div
+                className={`flex flex-col ${!isMobile && "flex-1"} rounded-md ${
+                    isMobile &&
+                    `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
+                        isExpanded ? "h-[80dvh] bottom-[2.5vh]" : ""
+                    }`
+                } shadow-lg bg-white`}
+            >
+                {isMobile && isOpen && (
+                    <MessageList
+                        messages={messages}
+                        setOpen={setIsOpen}
+                        isMobile={true}
+                        isExpanded={isExpanded}
+                        onExpand={() => setIsExpanded(!isExpanded)}
+                    />
+                )}
+                {!isMobile && (
+                    <MessageList messages={messages} isMobile={false} />
+                )}
+                <form
+                    onSubmit={handleSubmit}
+                    className="border-t border-gray-200 p-4"
+                >
+                    <div className="flex gap-2">
+                        <Input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Ask about this book..."
+                            className="flex-1"
+                        />
+                        <Button type="submit" size="icon" variant="ghost">
+                            <SendHorizontal className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 }
