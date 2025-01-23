@@ -132,7 +132,9 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
     >([]);
     const [input, setInput] = useState("");
     const [isOpen, setIsOpen] = useState(false);
+
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedConversation, setSelectedConversation] = useState<
         number | null
     >(null);
@@ -172,8 +174,8 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
     };
 
     return (
-        <div className={`flex h-full`}>
-            {!isMobile && (
+        <div className={`flex ${!isMobile && "h-full"} relative`}>
+            {!isMobile && isSidebarOpen && (
                 <div className="w-64 border-r border-gray-200 bg-gray-50">
                     <div className="p-4 border-b border-gray-200">
                         <h2 className="text-lg font-semibold">
@@ -207,13 +209,26 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                     </ScrollArea>
                 </div>
             )}
+            {!isMobile && (
+                <button
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    className="absolute left-0 top-4 z-10 p-2 bg-white border rounded-r-md hover:bg-gray-50"
+                    style={{
+                        transform: isSidebarOpen
+                            ? "translateX(16rem)"
+                            : "translateX(0)",
+                    }}
+                >
+                    {isSidebarOpen ? "←" : "→"}
+                </button>
+            )}
             <div
                 className={`flex flex-col ${!isMobile && "flex-1"} rounded-md ${
                     isMobile &&
                     `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
-                        isExpanded ? "h-[80dvh] bottom-[2.5vh]" : ""
+                        isExpanded ? "h-[80dvh] ]" : ""
                     }`
-                } shadow-lg bg-white`}
+                } shadow-lg bg-white `}
             >
                 {isMobile && isOpen && (
                     <MessageList
