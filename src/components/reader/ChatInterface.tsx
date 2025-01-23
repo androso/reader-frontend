@@ -1,124 +1,156 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SendHorizontal } from "lucide-react";
+import { SendHorizontal, Maximize2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { memo, useState } from "react";
 
 const MessageList = memo(
-  ({
-    isMobile,
-    messages,
-    setOpen,
-  }: {
-    isMobile: boolean;
-    messages: any;
-    setOpen?: (state: boolean) => void;
-  }) => (
-    <>
-      {isMobile && (
-        <div className="flex justify-end p-2 border-b">
-          <button
-            onClick={() => setOpen?.(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-      )}
+    ({
+        isMobile,
+        messages,
+        setOpen,
+        isExpanded,
+        onExpand,
+    }: {
+        isMobile: boolean;
+        messages: any;
+        setOpen?: (state: boolean) => void;
+        isExpanded?: boolean;
+        onExpand?: () => void;
+    }) => (
+        <>
+            {isMobile && (
+                <div className="flex justify-between p-2 border-b">
+                    <button
+                        onClick={onExpand}
+                        className="text-gray-500 hover:text-gray-700"
+                    >
+                        <Maximize2 className="h-5 w-5" />
+                    </button>
+                    <button
+                        onClick={() => setOpen?.(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            )}
 
-      <ScrollArea className={`${isMobile ? "h-[263px]" : "h-full"} p-4`}>
-        {messages.map((message: any, index: number) => (
-          <div
-            key={index}
-            className={`mb-4 ${
-              message.role === "assistant" ? "text-blue-600" : "text-gray-700"
-            }`}
-          >
-            <p className="text-sm">{message.content}</p>
-          </div>
-        ))}
-      </ScrollArea>
-    </>
-  ),
+            <ScrollArea
+                className={`${isMobile ? (isExpanded ? "h-[60dvh]" : "h-[200px]") : "h-full"} p-4`}
+            >
+                {(isMobile && !isExpanded ? messages.slice(-2) : messages)
+                    .filter(Boolean)
+                    .map((message: any, index: number) => (
+                        <div
+                            key={index}
+                            className={`mb-4 ${
+                                message.role === "assistant"
+                                    ? "text-blue-600"
+                                    : "text-gray-700"
+                            }`}
+                        >
+                            <p className="text-sm">{message.content}</p>
+                        </div>
+                    ))}
+            </ScrollArea>
+        </>
+    )
 );
 
 MessageList.displayName = "MessageList";
 
 export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
-  const [messages, setMessages] = useState<
-    Array<{ role: string; content: string }>
-  >([]);
-  const [input, setInput] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState<
+        Array<{ role: string; content: string }>
+    >([]);
+    const [input, setInput] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim()) return;
 
-    const userMessage = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsOpen(true);
+        const userMessage = { role: "user", content: input };
+        setMessages((prev) => [...prev, userMessage]);
+        setInput("");
+        setIsOpen(true);
 
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
-      });
+        try {
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: [...messages, userMessage] }),
+            });
 
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.text },
-      ]);
-    } catch (error) {
-      console.error("Error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, there was an error processing your request.",
-        },
-      ]);
-    }
-  };
+            const data = await response.json();
+            setMessages((prev) => [
+                ...prev,
+                { role: "assistant", content: data.text },
+            ]);
+        } catch (error) {
+            console.error("Error:", error);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content:
+                        "Sorry, there was an error processing your request.",
+                },
+            ]);
+        }
+    };
 
-  return (
-    <div
-      className={`flex flex-col ${!isMobile && "h-full"} rounded-md ${isMobile && "absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50  border-2 border-slate-300"} shadow-lg bg-white`}
-    >
-      {isMobile && isOpen && (
-        <MessageList messages={messages} setOpen={setIsOpen} isMobile={true} />
-      )}
-      {!isMobile && <MessageList messages={messages} isMobile={false} />}
-      <form onSubmit={handleSubmit} className="border-t border-gray-200 p-4">
-        <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about this book..."
-            className="flex-1"
-          />
-          <Button type="submit" size="icon" variant="ghost">
-            <SendHorizontal className="h-5 w-5" />
-          </Button>
+    return (
+        <div
+            className={`flex flex-col ${!isMobile && "h-full"} rounded-md ${
+                isMobile &&
+                `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
+                    isExpanded ? "h-[80dvh] bottom-[2.5vh]" : ""
+                }`
+            } shadow-lg bg-white`}
+        >
+            {isMobile && isOpen && (
+                <MessageList
+                    messages={messages}
+                    setOpen={setIsOpen}
+                    isMobile={true}
+                    isExpanded={isExpanded}
+                    onExpand={() => setIsExpanded(!isExpanded)}
+                />
+            )}
+            {!isMobile && <MessageList messages={messages} isMobile={false} />}
+            <form
+                onSubmit={handleSubmit}
+                className="border-t border-gray-200 p-4"
+            >
+                <div className="flex gap-2">
+                    <Input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Ask about this book..."
+                        className="flex-1"
+                    />
+                    <Button type="submit" size="icon" variant="ghost">
+                        <SendHorizontal className="h-5 w-5" />
+                    </Button>
+                </div>
+            </form>
         </div>
-      </form>
-    </div>
-  );
+    );
 }
