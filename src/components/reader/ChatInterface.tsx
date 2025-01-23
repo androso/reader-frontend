@@ -302,20 +302,22 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
     return (
         <div className={`flex ${!isMobile && "h-full"} relative`}>
             {!isMobile && chatState.isHistoryOpen && (
-                <ChatHistory
-                    conversations={pastConversations}
-                    onSelectConversation={handleSelectConversation}
-                />
+                <div className="overflow-x-hidden max-w-[40%]">
+                    <ChatHistory
+                        conversations={pastConversations}
+                        onSelectConversation={handleSelectConversation}
+                    />
+                </div>
             )}
             <div
-                className={`flex flex-col ${!isMobile && "flex-1"} rounded-md ${
+                className={`flex flex-col ${!isMobile && "flex-1 justify-end"} rounded-md ${
                     isMobile &&
                     `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300  ${
                         chatState.isExpanded ? "h-[80dvh]" : ""
                     }`
                 } shadow-lg bg-white`}
             >
-                {chatState.isChatOpen && (
+                {!isMobile && chatState.isChatOpen && (
                     <div
                         className={`flex ${chatState.isHistoryOpen ? "justify-end" : "justify-between"} p-2 border-b`}
                     >
@@ -361,14 +363,16 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                     </div>
                 )}
 
-                {chatState.isChatOpen && chatState.isHistoryOpen && (
-                    <div className="overflow-scroll">
-                        <ChatHistory
-                            conversations={pastConversations}
-                            onSelectConversation={handleSelectConversation}
-                        />
-                    </div>
-                )}
+                {isMobile &&
+                    chatState.isChatOpen &&
+                    chatState.isHistoryOpen && (
+                        <div className="overflow-scroll">
+                            <ChatHistory
+                                conversations={pastConversations}
+                                onSelectConversation={handleSelectConversation}
+                            />
+                        </div>
+                    )}
                 {chatState.isChatOpen && !chatState.isHistoryOpen && (
                     <MessageList
                         messages={chatState.messages}
@@ -386,14 +390,16 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                             type="button"
                             size="icon"
                             variant="ghost"
-                            onClick={() =>
+                            onClick={() => {
+                                if (!isMobile) {
+                                }
                                 setChatState((prev) => ({
                                     ...prev,
                                     isHistoryOpen: !prev.isHistoryOpen,
                                     isChatOpen: true,
                                     isExpanded: true,
-                                }))
-                            }
+                                }));
+                            }}
                         >
                             <Clock className="h-5 w-5" />
                         </Button>
