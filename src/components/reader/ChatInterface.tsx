@@ -5,7 +5,18 @@ import { SendHorizontal, Maximize2, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dispatch, memo, SetStateAction, useState } from "react";
 
-// Past conversations data
+type Message = {
+    role: string;
+    content: string;
+};
+
+type Conversation = {
+    id: number;
+    title: string;
+    date: string;
+    messages: Message[];
+};
+
 const pastConversations = [
     {
         id: 1,
@@ -41,17 +52,99 @@ const pastConversations = [
     },
     {
         id: 3,
-        title: "Plot Discussion",
-        date: "2024-01-08",
+        title: "Analysis",
+        date: "2024-01-09",
         messages: [
             {
                 role: "user",
-                content: "How does the plot develop in the middle chapters?",
+                content:
+                    "hesflksdjWhat are the key characteristics of the protagonist?",
             },
             {
                 role: "assistant",
                 content:
-                    "The plot intensifies as new challenges emerge, testing the characters' resolve.",
+                    "The protagonist shows strong leadership qualities and innovative thinking throughout the story.",
+            },
+        ],
+    },
+    {
+        id: 4,
+        title: "Chapter 1",
+        date: "2024-01-10",
+        messages: [
+            {
+                role: "user",
+                content: "Can you explain the main theme of Chapter 1?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The main theme revolves around the concept of vertical progress versus horizontal progress in technology.",
+            },
+        ],
+    },
+    {
+        id: 5,
+        title: "Understanding Chapter 1",
+        date: "2024-01-10",
+        messages: [
+            {
+                role: "user",
+                content: "Can you explain the main theme of Chapter 1?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The main theme revolves around the concept of vertical progress versus horizontal progress in technology.",
+            },
+        ],
+    },
+    {
+        id: 6,
+        title: "Character Analysis",
+        date: "2024-01-09",
+        messages: [
+            {
+                role: "user",
+                content: "What are the key characteristics of the protagonist?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The protagonist shows strong leadership qualities and innovative thinking throughout the story.",
+            },
+        ],
+    },
+    {
+        id: 7,
+        title: "Analysis",
+        date: "2024-01-09",
+        messages: [
+            {
+                role: "user",
+                content:
+                    "hesflksdjWhat are the key characteristics of the protagonist?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The protagonist shows strong leadership qualities and innovative thinking throughout the story.",
+            },
+        ],
+    },
+    {
+        id: 8,
+        title: "Chapter 1",
+        date: "2024-01-10",
+        messages: [
+            {
+                role: "user",
+                content: "Can you explain the main theme of Chapter 1?",
+            },
+            {
+                role: "assistant",
+                content:
+                    "The main theme revolves around the concept of vertical progress versus horizontal progress in technology.",
             },
         ],
     },
@@ -59,74 +152,64 @@ const pastConversations = [
 
 const MessageList = memo(
     ({
-        isMobile,
         messages,
+        isMobile,
         isExpanded,
-        isOpen = true,
     }: {
+        messages: Message[];
         isMobile: boolean;
-        messages: any;
-        isExpanded?: boolean;
-        isOpen?: boolean;
+        isExpanded: boolean;
     }) => {
-        if (!isOpen) return;
-
         return (
-            <>
-                <ScrollArea
-                    className={`${isMobile ? (isExpanded ? "h-[60dvh]" : "h-[200px]") : "h-full"} p-4 space-y-3`}
-                >
-                    {(isMobile && !isExpanded ? messages.slice(-2) : messages)
-                        .filter(Boolean)
-                        .map((message: any, index: number) => (
-                            <div
-                                key={index}
-                                className={`mb-4 p-3 rounded-lg ${
+            <ScrollArea
+                className={`${isMobile ? (isExpanded ? "h-full" : "h-[200px]") : "h-full"} p-4 space-y-3`}
+            >
+                {(isMobile && !isExpanded ? messages.slice(-2) : messages)
+                    .filter(Boolean)
+                    .map((message: Message, index: number) => (
+                        <div
+                            key={index}
+                            className={`mb-4 p-3 rounded-lg ${
+                                message.role === "assistant"
+                                    ? "bg-blue-50 border border-blue-100"
+                                    : "bg-gray-50 border border-gray-100"
+                            }`}
+                        >
+                            <p
+                                className={`text-sm leading-relaxed ${
                                     message.role === "assistant"
-                                        ? "bg-blue-50 border border-blue-100"
-                                        : "bg-gray-50 border border-gray-100"
+                                        ? "text-blue-700 font-medium"
+                                        : "text-gray-700"
                                 }`}
                             >
-                                <p
-                                    className={`text-sm leading-relaxed ${
-                                        message.role === "assistant"
-                                            ? "text-blue-700 font-medium"
-                                            : "text-gray-700"
-                                    }`}
-                                >
-                                    {message.content}
-                                </p>
-                            </div>
-                        ))}
-                </ScrollArea>
-            </>
+                                {message.content}
+                            </p>
+                        </div>
+                    ))}
+            </ScrollArea>
         );
     }
 );
 MessageList.displayName = "MessageList";
 
 function ChatHistory({
-    selectedConversation,
-    setSelectedConversation,
+    conversations,
+    onSelectConversation,
 }: {
-    selectedConversation: number | null;
-    setSelectedConversation: Dispatch<SetStateAction<number | null>>;
+    conversations: Conversation[];
+    onSelectConversation: (conversation: Conversation) => void;
 }) {
     return (
-        <div className="w-64 border-r border-gray-200 bg-gray-50">
+        <div className="border-r border-gray-200 bg-gray-50">
             <div className="p-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold">Past Conversations</h2>
             </div>
             <ScrollArea className="h-full">
-                {pastConversations.map((conversation) => (
+                {conversations.map((conversation) => (
                     <button
                         key={conversation.id}
-                        onClick={() => setSelectedConversation(conversation.id)}
-                        className={`w-full p-4 text-left hover:bg-gray-100 border-b border-gray-200 ${
-                            selectedConversation === conversation.id
-                                ? "bg-gray-100"
-                                : ""
-                        }`}
+                        onClick={() => onSelectConversation(conversation)}
+                        className="w-full p-4 text-left hover:bg-gray-100 border-b border-gray-200"
                     >
                         <div className="flex items-center gap-2 mb-1">
                             <Clock className="h-4 w-4 text-gray-500" />
@@ -143,94 +226,121 @@ function ChatHistory({
         </div>
     );
 }
-export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
-    const [messages, setMessages] = useState<
-        Array<{ role: string; content: string }>
-    >([]);
-    const [input, setInput] = useState("");
-    const [isOpen, setIsOpen] = useState(false);
 
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [selectedConversation, setSelectedConversation] = useState<
-        number | null
-    >(null);
+export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
+    const [chatState, setChatState] = useState<{
+        messages: Message[];
+        isHistoryOpen: boolean;
+        isExpanded: boolean;
+        isChatOpen: boolean;
+        currentConversation: Conversation | null;
+    }>({
+        messages: [],
+        isHistoryOpen: false,
+        isExpanded: false,
+        isChatOpen: false,
+        currentConversation: null,
+    });
+
+    const [input, setInput] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
 
         const userMessage = { role: "user", content: input };
-        setMessages((prev) => [...prev, userMessage]);
+        setChatState((prev) => ({
+            ...prev,
+            messages: [...prev.messages, userMessage],
+            isChatOpen: true,
+        }));
         setInput("");
-        setIsOpen(true);
 
         try {
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: [...messages, userMessage] }),
+                body: JSON.stringify({
+                    messages: [...chatState.messages, userMessage],
+                }),
             });
 
             const data = await response.json();
-            setMessages((prev) => [
+            setChatState((prev) => ({
                 ...prev,
-                { role: "assistant", content: data.text },
-            ]);
+                messages: [
+                    ...prev.messages,
+                    { role: "assistant", content: data.text },
+                ],
+            }));
         } catch (error) {
             console.error("Error:", error);
-            setMessages((prev) => [
+            setChatState((prev) => ({
                 ...prev,
-                {
-                    role: "assistant",
-                    content:
-                        "Sorry, there was an error processing your request.",
-                },
-            ]);
+                messages: [
+                    ...prev.messages,
+                    {
+                        role: "assistant",
+                        content:
+                            "Sorry, there was an error processing your request.",
+                    },
+                ],
+            }));
         }
+    };
+
+    const handleSelectConversation = (conversation: Conversation) => {
+        setChatState((prev) => ({
+            ...prev,
+            messages: conversation.messages,
+            currentConversation: conversation,
+            isHistoryOpen: false,
+            isChatOpen: true,
+        }));
     };
 
     return (
         <div className={`flex ${!isMobile && "h-full"} relative`}>
-            {!isMobile && (
-                <>
-                    isSidebarOpen && (
-                    <ChatHistory
-                        selectedConversation={selectedConversation}
-                        setSelectedConversation={setSelectedConversation}
-                    />
-                    )
-                    <button
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="absolute left-0 top-4 z-10 p-2 bg-white border rounded-r-md hover:bg-gray-50"
-                        style={{
-                            transform: isSidebarOpen
-                                ? "translateX(16rem)"
-                                : "translateX(0)",
-                        }}
-                    >
-                        {isSidebarOpen ? "←" : "→"}
-                    </button>
-                </>
+            {!isMobile && chatState.isHistoryOpen && (
+                <ChatHistory
+                    conversations={pastConversations}
+                    onSelectConversation={handleSelectConversation}
+                />
             )}
             <div
                 className={`flex flex-col ${!isMobile && "flex-1"} rounded-md ${
                     isMobile &&
-                    `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
-                        isExpanded ? "h-[80dvh] ]" : ""
+                    `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300  ${
+                        chatState.isExpanded ? "h-[80dvh]" : ""
                     }`
-                } shadow-lg bg-white `}
+                } shadow-lg bg-white`}
             >
-                {isOpen && (
-                    <div className="flex justify-between p-2 border-b">
+                {chatState.isChatOpen && (
+                    <div
+                        className={`flex ${chatState.isHistoryOpen ? "justify-end" : "justify-between"} p-2 border-b`}
+                    >
+                        {!chatState.isHistoryOpen && (
+                            <button
+                                onClick={() =>
+                                    setChatState((prev) => ({
+                                        ...prev,
+                                        isExpanded: !prev.isExpanded,
+                                    }))
+                                }
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <Maximize2 className="h-5 w-5" />
+                            </button>
+                        )}
                         <button
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="text-gray-500 hover:text-gray-700"
-                        >
-                            <Maximize2 className="h-5 w-5" />
-                        </button>
-                        <button
-                            onClick={() => setIsOpen(false)}
+                            onClick={() =>
+                                setChatState((prev) => ({
+                                    ...prev,
+                                    isChatOpen: false,
+                                    isExpanded: false,
+                                    isHistoryOpen: false,
+                                }))
+                            }
                             className="text-gray-500 hover:text-gray-700"
                         >
                             <svg
@@ -250,28 +360,43 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                         </button>
                     </div>
                 )}
-                <MessageList
-                    messages={messages}
-                    isMobile={isMobile}
-                    isOpen={isOpen}
-                    isExpanded={isExpanded}
-                />
+
+                {chatState.isChatOpen && chatState.isHistoryOpen && (
+                    <div className="overflow-scroll">
+                        <ChatHistory
+                            conversations={pastConversations}
+                            onSelectConversation={handleSelectConversation}
+                        />
+                    </div>
+                )}
+                {chatState.isChatOpen && !chatState.isHistoryOpen && (
+                    <MessageList
+                        messages={chatState.messages}
+                        isMobile={isMobile}
+                        isExpanded={chatState.isExpanded}
+                    />
+                )}
 
                 <form
                     onSubmit={handleSubmit}
                     className="border-t border-gray-200 p-4"
                 >
                     <div className="flex gap-2">
-                        {isMobile && (
-                            <Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => setIsOpen(true)}
-                            >
-                                <Clock className="h-5 w-5" />
-                            </Button>
-                        )}
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() =>
+                                setChatState((prev) => ({
+                                    ...prev,
+                                    isHistoryOpen: !prev.isHistoryOpen,
+                                    isChatOpen: true,
+                                    isExpanded: true,
+                                }))
+                            }
+                        >
+                            <Clock className="h-5 w-5" />
+                        </Button>
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
