@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SendHorizontal, Maximize2, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { memo, useState } from "react";
+import { Dispatch, memo, SetStateAction, useState } from "react";
 
 // Past conversations data
 const pastConversations = [
@@ -61,79 +61,88 @@ const MessageList = memo(
     ({
         isMobile,
         messages,
-        setOpen,
         isExpanded,
-        onExpand,
+        isOpen = true,
     }: {
         isMobile: boolean;
         messages: any;
-        setOpen?: (state: boolean) => void;
         isExpanded?: boolean;
-        onExpand?: () => void;
-    }) => (
-        <>
-            {isMobile && (
-                <div className="flex justify-between p-2 border-b">
-                    <button
-                        onClick={onExpand}
-                        className="text-gray-500 hover:text-gray-700"
-                    >
-                        <Maximize2 className="h-5 w-5" />
-                    </button>
-                    <button
-                        onClick={() => setOpen?.(false)}
-                        className="text-gray-500 hover:text-gray-700"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-            )}
+        isOpen?: boolean;
+    }) => {
+        if (!isOpen) return;
 
-            <ScrollArea
-                className={`${isMobile ? (isExpanded ? "h-[60dvh]" : "h-[200px]") : "h-full"} p-4 space-y-3`}
-            >
-                {(isMobile && !isExpanded ? messages.slice(-2) : messages)
-                    .filter(Boolean)
-                    .map((message: any, index: number) => (
-                        <div
-                            key={index}
-                            className={`mb-4 p-3 rounded-lg ${
-                                message.role === "assistant"
-                                    ? "bg-blue-50 border border-blue-100"
-                                    : "bg-gray-50 border border-gray-100"
-                            }`}
-                        >
-                            <p
-                                className={`text-sm leading-relaxed ${
+        return (
+            <>
+                <ScrollArea
+                    className={`${isMobile ? (isExpanded ? "h-[60dvh]" : "h-[200px]") : "h-full"} p-4 space-y-3`}
+                >
+                    {(isMobile && !isExpanded ? messages.slice(-2) : messages)
+                        .filter(Boolean)
+                        .map((message: any, index: number) => (
+                            <div
+                                key={index}
+                                className={`mb-4 p-3 rounded-lg ${
                                     message.role === "assistant"
-                                        ? "text-blue-700 font-medium"
-                                        : "text-gray-700"
+                                        ? "bg-blue-50 border border-blue-100"
+                                        : "bg-gray-50 border border-gray-100"
                                 }`}
                             >
-                                {message.content}
-                            </p>
-                        </div>
-                    ))}
-            </ScrollArea>
-        </>
-    )
+                                <p
+                                    className={`text-sm leading-relaxed ${
+                                        message.role === "assistant"
+                                            ? "text-blue-700 font-medium"
+                                            : "text-gray-700"
+                                    }`}
+                                >
+                                    {message.content}
+                                </p>
+                            </div>
+                        ))}
+                </ScrollArea>
+            </>
+        );
+    }
 );
-
 MessageList.displayName = "MessageList";
 
+function ChatHistory({
+    selectedConversation,
+    setSelectedConversation,
+}: {
+    selectedConversation: number | null;
+    setSelectedConversation: Dispatch<SetStateAction<number | null>>;
+}) {
+    return (
+        <div className="w-64 border-r border-gray-200 bg-gray-50">
+            <div className="p-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold">Past Conversations</h2>
+            </div>
+            <ScrollArea className="h-full">
+                {pastConversations.map((conversation) => (
+                    <button
+                        key={conversation.id}
+                        onClick={() => setSelectedConversation(conversation.id)}
+                        className={`w-full p-4 text-left hover:bg-gray-100 border-b border-gray-200 ${
+                            selectedConversation === conversation.id
+                                ? "bg-gray-100"
+                                : ""
+                        }`}
+                    >
+                        <div className="flex items-center gap-2 mb-1">
+                            <Clock className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm font-medium">
+                                {conversation.title}
+                            </span>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                            {conversation.date}
+                        </span>
+                    </button>
+                ))}
+            </ScrollArea>
+        </div>
+    );
+}
 export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
     const [messages, setMessages] = useState<
         Array<{ role: string; content: string }>
@@ -183,52 +192,26 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
 
     return (
         <div className={`flex ${!isMobile && "h-full"} relative`}>
-            {!isMobile && isSidebarOpen && (
-                <div className="w-64 border-r border-gray-200 bg-gray-50">
-                    <div className="p-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold">
-                            Past Conversations
-                        </h2>
-                    </div>
-                    <ScrollArea className="h-full">
-                        {pastConversations.map((conversation) => (
-                            <button
-                                key={conversation.id}
-                                onClick={() =>
-                                    setSelectedConversation(conversation.id)
-                                }
-                                className={`w-full p-4 text-left hover:bg-gray-100 border-b border-gray-200 ${
-                                    selectedConversation === conversation.id
-                                        ? "bg-gray-100"
-                                        : ""
-                                }`}
-                            >
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Clock className="h-4 w-4 text-gray-500" />
-                                    <span className="text-sm font-medium">
-                                        {conversation.title}
-                                    </span>
-                                </div>
-                                <span className="text-xs text-gray-500">
-                                    {conversation.date}
-                                </span>
-                            </button>
-                        ))}
-                    </ScrollArea>
-                </div>
-            )}
             {!isMobile && (
-                <button
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="absolute left-0 top-4 z-10 p-2 bg-white border rounded-r-md hover:bg-gray-50"
-                    style={{
-                        transform: isSidebarOpen
-                            ? "translateX(16rem)"
-                            : "translateX(0)",
-                    }}
-                >
-                    {isSidebarOpen ? "←" : "→"}
-                </button>
+                <>
+                    isSidebarOpen && (
+                    <ChatHistory
+                        selectedConversation={selectedConversation}
+                        setSelectedConversation={setSelectedConversation}
+                    />
+                    )
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="absolute left-0 top-4 z-10 p-2 bg-white border rounded-r-md hover:bg-gray-50"
+                        style={{
+                            transform: isSidebarOpen
+                                ? "translateX(16rem)"
+                                : "translateX(0)",
+                        }}
+                    >
+                        {isSidebarOpen ? "←" : "→"}
+                    </button>
+                </>
             )}
             <div
                 className={`flex flex-col ${!isMobile && "flex-1"} rounded-md ${
@@ -238,18 +221,42 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                     }`
                 } shadow-lg bg-white `}
             >
-                {isMobile && isOpen && (
-                    <MessageList
-                        messages={messages}
-                        setOpen={setIsOpen}
-                        isMobile={true}
-                        isExpanded={isExpanded}
-                        onExpand={() => setIsExpanded(!isExpanded)}
-                    />
+                {isOpen && (
+                    <div className="flex justify-between p-2 border-b">
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            <Maximize2 className="h-5 w-5" />
+                        </button>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
                 )}
-                {!isMobile && (
-                    <MessageList messages={messages} isMobile={false} />
-                )}
+                <MessageList
+                    messages={messages}
+                    isMobile={isMobile}
+                    isOpen={isOpen}
+                    isExpanded={isExpanded}
+                />
+
                 <form
                     onSubmit={handleSubmit}
                     className="border-t border-gray-200 p-4"
