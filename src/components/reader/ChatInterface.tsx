@@ -1,9 +1,14 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SendHorizontal, Maximize2, Clock } from "lucide-react";
+import {
+    SendHorizontal,
+    Maximize2,
+    History,
+    MessageSquareText,
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dispatch, memo, SetStateAction, useState } from "react";
+import { memo, useState } from "react";
 
 type Message = {
     role: string;
@@ -212,7 +217,7 @@ function ChatHistory({
                         className="w-full p-4 text-left hover:bg-gray-100 border-b border-gray-200"
                     >
                         <div className="flex items-center gap-2 mb-1">
-                            <Clock className="h-4 w-4 text-gray-500" />
+                            <MessageSquareText className="h-4 w-4 text-gray-500" />
                             <span className="text-sm font-medium">
                                 {conversation.title}
                             </span>
@@ -317,7 +322,7 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                     }`
                 } shadow-lg bg-white`}
             >
-                {!isMobile && chatState.isChatOpen && (
+                {chatState.isChatOpen && (
                     <div
                         className={`flex ${chatState.isHistoryOpen ? "justify-end" : "justify-between"} p-2 border-b`}
                     >
@@ -401,7 +406,7 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
                                 }));
                             }}
                         >
-                            <Clock className="h-5 w-5" />
+                            <History className="h-5 w-5" />
                         </Button>
                         <Input
                             value={input}
