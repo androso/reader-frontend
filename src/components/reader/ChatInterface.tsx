@@ -204,10 +204,27 @@ function ChatHistory({
     conversations: Conversation[];
     onSelectConversation: (conversation: Conversation) => void;
 }) {
+    const handleNewThread = () => {
+        onSelectConversation({
+            id: Date.now(),
+            title: "New Conversation",
+            date: new Date().toISOString().split("T")[0],
+            messages: [],
+        });
+    };
+
     return (
         <div className="border-r border-gray-200 bg-gray-50">
             <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold">Past Conversations</h2>
+                <div className="flex justify-between items-center">
+                    <Button
+                        onClick={handleNewThread}
+                        size="sm"
+                        variant="outline"
+                    >
+                        Start new thread
+                    </Button>
+                </div>
             </div>
             <ScrollArea className="h-full">
                 {conversations.map((conversation) => (
