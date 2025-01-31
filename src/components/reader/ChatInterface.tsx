@@ -257,27 +257,29 @@ export function ChatInterface({
     isMobile?: boolean;
     bookId: string;
 }) {
-    const { data: conversationsData } = useQuery({
-        queryKey: [
-            `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
-        ],
-        queryFn: async () => {
-            const token = localStorage.getItem("token");
-            const response = await fetch(
+    const { data: conversationsData, refetch: refetchConversations } = useQuery(
+        {
+            queryKey: [
                 `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+            ],
+            queryFn: async () => {
+                const token = localStorage.getItem("token");
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch conversations");
                 }
-            );
-            if (!response.ok) {
-                throw new Error("Failed to fetch conversations");
-            }
-            return response.json();
-        },
-        enabled: !!bookId,
-    });
+                return response.json();
+            },
+            enabled: !!bookId,
+        }
+    );
     const [chatState, setChatState] = useState<{
         messages: Message[];
         isHistoryOpen: boolean;
@@ -542,8 +544,7 @@ export function ChatInterface({
                             size="icon"
                             variant="ghost"
                             onClick={() => {
-                                if (!isMobile) {
-                                }
+                                refetchConversations();
                                 setChatState((prev) => ({
                                     ...prev,
                                     isHistoryOpen: !prev.isHistoryOpen,
