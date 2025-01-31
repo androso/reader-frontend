@@ -10,7 +10,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { memo, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-
+import { motion } from "motion/react";
 type Message = {
     role: string;
     content: string;
@@ -392,26 +392,27 @@ export function ChatInterface({
         }
     };
 
-    const { data: selectedConversationData } = useQuery({
-        queryKey: [`conversation-${chatState?.currentConversation?.id}`],
-        queryFn: async () => {
-            if (!chatState.currentConversation) return null;
-            const token = localStorage.getItem("token");
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+    const { data: selectedConversationData, isLoading: isLoadingConversation } =
+        useQuery({
+            queryKey: [`conversation-${chatState?.currentConversation?.id}`],
+            queryFn: async () => {
+                if (!chatState.currentConversation) return null;
+                const token = localStorage.getItem("token");
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch conversation");
                 }
-            );
-            if (!response.ok) {
-                throw new Error("Failed to fetch conversation");
-            }
-            return response.json();
-        },
-        enabled: !!chatState.currentConversation,
-    });
+                return response.json();
+            },
+            enabled: !!chatState.currentConversation,
+        });
 
     const handleSelectConversation = (conversation: Conversation) => {
         setChatState((prev) => ({
@@ -506,11 +507,27 @@ export function ChatInterface({
                         </div>
                     )}
                 {chatState.isChatOpen && !chatState.isHistoryOpen && (
-                    <MessageList
-                        messages={chatState.messages}
-                        isMobile={isMobile}
-                        isExpanded={chatState.isExpanded}
-                    />
+                    <>
+                        {isLoadingConversation ? (
+                            <div className="flex items-center justify-center h-full">
+                                <motion.div
+                                    className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+                                    animate={{ rotate: 360 }}
+                                    transition={{
+                                        duration: 1,
+                                        repeat: Infinity,
+                                        ease: "linear",
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <MessageList
+                                messages={chatState.messages}
+                                isMobile={isMobile}
+                                isExpanded={chatState.isExpanded}
+                            />
+                        )}
+                    </>
                 )}
 
                 <form
