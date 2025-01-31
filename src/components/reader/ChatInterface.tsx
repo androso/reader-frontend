@@ -8,7 +8,7 @@ import {
     MessageSquareText,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 type Message = {
@@ -392,16 +392,45 @@ export function ChatInterface({
         }
     };
 
+    const { data: selectedConversationData } = useQuery({
+        queryKey: [`conversation-${chatState?.currentConversation?.id}`],
+        queryFn: async () => {
+            if (!chatState.currentConversation) return null;
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch conversation");
+            }
+            return response.json();
+        },
+        enabled: !!chatState.currentConversation,
+    });
+
     const handleSelectConversation = (conversation: Conversation) => {
         setChatState((prev) => ({
             ...prev,
-            messages: conversation.messages,
             currentConversation: conversation,
             isHistoryOpen: false,
             isChatOpen: true,
         }));
     };
 
+    useEffect(() => {
+        if (selectedConversationData) {
+            setChatState((prev) => ({
+                ...prev,
+                messages: selectedConversationData.messages,
+            }));
+        }
+    }, [selectedConversationData]);
+    console.log({ conversationsData });
     return (
         <div className={`flex ${!isMobile && "h-full"} relative`}>
             {!isMobile && chatState.isHistoryOpen && (
@@ -469,7 +498,7 @@ export function ChatInterface({
                 {isMobile &&
                     chatState.isChatOpen &&
                     chatState.isHistoryOpen && (
-                        <div className="overflow-scroll">
+                        <div className="overflow-scroll h-full">
                             <ChatHistory
                                 conversations={conversationsData.conversations}
                                 onSelectConversation={handleSelectConversation}
