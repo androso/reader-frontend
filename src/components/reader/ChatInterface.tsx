@@ -249,7 +249,13 @@ function ChatHistory({
     );
 }
 
-export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
+export function ChatInterface({
+    isMobile = false,
+    bookId,
+}: {
+    isMobile?: boolean;
+    bookId: string;
+}) {
     const [chatState, setChatState] = useState<{
         messages: Message[];
         isHistoryOpen: boolean;
@@ -263,7 +269,6 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
         isChatOpen: false,
         currentConversation: null,
     });
-
     const [input, setInput] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -279,22 +284,76 @@ export function ChatInterface({ isMobile = false }: { isMobile?: boolean }) {
         setInput("");
 
         try {
-            const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    messages: [...chatState.messages, userMessage],
-                }),
-            });
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        message: userMessage.content,
+                        messages: [...chatState.messages, userMessage],
+                    }),
+                }
+            );
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error("Failed to send message");
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error("No response stream");
+
+            const assistantMessage = { role: "assistant", content: "" };
             setChatState((prev) => ({
                 ...prev,
-                messages: [
-                    ...prev.messages,
-                    { role: "assistant", content: data.text },
-                ],
+                messages: [...prev.messages, assistantMessage],
             }));
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const text = new TextDecoder().decode(value);
+                const lines = text.split("\n\n");
+
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const data = line.slice(5);
+                        if (data === "[DONE]" || !data.trim()) continue;
+
+                        try {
+                            const { content } = JSON.parse(data);
+                            setChatState((prev) => {
+                                const lastMessage =
+                                    prev.messages[prev.messages.length - 1];
+                                if (lastMessage.role === "assistant") {
+                                    return {
+                                        ...prev,
+                                        messages: [
+                                            ...prev.messages.slice(0, -1),
+                                            {
+                                                ...lastMessage,
+                                                content:
+                                                    lastMessage.content +
+                                                    content,
+                                            },
+                                        ],
+                                    };
+                                }
+                                return prev;
+                            });
+                        } catch (e) {
+                            if (!data.includes("[DONE]")) {
+                                console.error("Failed to parse SSE data:", e);
+                            }
+                        }
+                    }
+                }
+            }
         } catch (error) {
             console.error("Error:", error);
             setChatState((prev) => ({
