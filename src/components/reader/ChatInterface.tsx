@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { memo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 type Message = {
     role: string;
@@ -256,6 +257,27 @@ export function ChatInterface({
     isMobile?: boolean;
     bookId: string;
 }) {
+    const { data: conversationsData } = useQuery({
+        queryKey: [
+            `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
+        ],
+        queryFn: async () => {
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch conversations");
+            }
+            return response.json();
+        },
+        enabled: !!bookId,
+    });
     const [chatState, setChatState] = useState<{
         messages: Message[];
         isHistoryOpen: boolean;
@@ -385,7 +407,7 @@ export function ChatInterface({
             {!isMobile && chatState.isHistoryOpen && (
                 <div className="overflow-x-hidden max-w-[40%]">
                     <ChatHistory
-                        conversations={pastConversations}
+                        conversations={conversationsData?.conversations}
                         onSelectConversation={handleSelectConversation}
                     />
                 </div>
@@ -449,7 +471,7 @@ export function ChatInterface({
                     chatState.isHistoryOpen && (
                         <div className="overflow-scroll">
                             <ChatHistory
-                                conversations={pastConversations}
+                                conversations={conversationsData.conversations}
                                 onSelectConversation={handleSelectConversation}
                             />
                         </div>
