@@ -307,20 +307,22 @@ export function ChatInterface({
 
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        message: userMessage.content,
-                        messages: [...chatState.messages, userMessage],
-                    }),
-                }
-            );
+            const endpoint = chatState.currentConversation
+                ? `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}/messages`
+                : `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`;
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    message: userMessage.content,
+                    role: "user",
+                    messages: [...chatState.messages, userMessage],
+                }),
+            });
 
             if (!response.ok) {
                 throw new Error("Failed to send message");
