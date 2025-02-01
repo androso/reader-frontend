@@ -1,121 +1,12 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-    SendHorizontal,
-    Maximize2,
-    History,
-    MessageSquareText,
-} from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { memo, useEffect, useState } from "react";
+import { SendHorizontal, Maximize2, History } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-type Message = {
-    role: string;
-    content: string;
-};
-
-type Conversation = {
-    id: number;
-    title: string;
-    date: string;
-    messages: Message[];
-};
-
-const MessageList = memo(
-    ({
-        messages,
-        isMobile,
-        isExpanded,
-    }: {
-        messages: Message[];
-        isMobile: boolean;
-        isExpanded: boolean;
-    }) => {
-        return (
-            <ScrollArea
-                className={`${isMobile ? (isExpanded ? "h-full" : "h-[200px]") : "h-full"} p-4 space-y-3`}
-            >
-                {(isMobile && !isExpanded ? messages.slice(-2) : messages)
-                    .filter(Boolean)
-                    .map((message: Message, index: number) => (
-                        <div
-                            key={index}
-                            className={`mb-4 p-3 rounded-lg ${
-                                message.role === "assistant"
-                                    ? "bg-blue-50 border border-blue-100"
-                                    : "bg-gray-50 border border-gray-100"
-                            }`}
-                        >
-                            <p
-                                className={`text-sm leading-relaxed ${
-                                    message.role === "assistant"
-                                        ? "text-blue-700 font-medium"
-                                        : "text-gray-700"
-                                }`}
-                            >
-                                {message.content}
-                            </p>
-                        </div>
-                    ))}
-            </ScrollArea>
-        );
-    }
-);
-MessageList.displayName = "MessageList";
-
-function ChatHistory({
-    conversations,
-    onSelectConversation,
-}: {
-    conversations: Conversation[];
-    onSelectConversation: (conversation: Conversation) => void;
-}) {
-    const handleNewThread = () => {
-        onSelectConversation({
-            id: Date.now(),
-            title: "New Conversation",
-            date: new Date().toISOString().split("T")[0],
-            messages: [],
-        });
-    };
-
-    return (
-        <div className="border-r border-gray-200 bg-gray-50">
-            <div className="p-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                    <Button
-                        onClick={handleNewThread}
-                        size="sm"
-                        variant="outline"
-                    >
-                        Start new thread
-                    </Button>
-                </div>
-            </div>
-            <ScrollArea className="h-full">
-                {conversations.map((conversation) => (
-                    <button
-                        key={conversation.id}
-                        onClick={() => onSelectConversation(conversation)}
-                        className="w-full p-4 text-left hover:bg-gray-100 border-b border-gray-200"
-                    >
-                        <div className="flex items-center gap-2 mb-1">
-                            <MessageSquareText className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm font-medium">
-                                {conversation.title}
-                            </span>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                            {conversation.date}
-                        </span>
-                    </button>
-                ))}
-            </ScrollArea>
-        </div>
-    );
-}
+import MessageList, { Message } from "./MessageList";
+import ChatHistory, { Conversation } from "./ChatHistory";
 
 export function ChatInterface({
     isMobile = false,
@@ -163,15 +54,7 @@ export function ChatInterface({
     const [input, setInput] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim()) return;
-
         const userMessage = { role: "user", content: input };
-        setChatState((prev) => ({
-            ...prev,
-            messages: [...prev.messages, userMessage],
-            isChatOpen: true,
-        }));
         setInput("");
 
         try {
@@ -179,6 +62,12 @@ export function ChatInterface({
             const endpoint = chatState.currentConversation
                 ? `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}/messages`
                 : `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`;
+
+            // setChatState((prev) => ({
+            //     ...prev,
+            //     messages: [...prev.messages, userMessage],
+            //     isChatOpen: true,
+            // }));
 
             const response = await fetch(endpoint, {
                 method: "POST",
@@ -204,49 +93,117 @@ export function ChatInterface({
             setChatState((prev) => ({
                 ...prev,
                 messages: [...prev.messages, assistantMessage],
+                currentConversation: {
+                    ...(chatState.currentConversation as any),
+                    messages: [...prev.messages, assistantMessage],
+                },
             }));
+
+            let conversationId: string | null = null;
+            const textDecoder = new TextDecoder();
+            let buffer = "";
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                const text = new TextDecoder().decode(value);
-                const lines = text.split("\n\n");
+                // Append new chunk to buffer and split into lines
+                buffer += textDecoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || ""; // Keep last partial line in buffer
 
-                for (const line of lines) {
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+
+                    // Check if this is a data line
                     if (line.startsWith("data: ")) {
-                        const data = line.slice(5);
-                        if (data === "[DONE]" || !data.trim()) continue;
+                        const data = line.slice(6).trim();
+
+                        // Handle the [DONE] message
+                        if (data === "[DONE]") {
+                            continue;
+                        }
 
                         try {
-                            const { content } = JSON.parse(data);
-                            setChatState((prev) => {
-                                const lastMessage =
-                                    prev.messages[prev.messages.length - 1];
-                                if (lastMessage.role === "assistant") {
+                            const jsonData = JSON.parse(data);
+
+                            // Handle conversation ID
+                            if (jsonData.type === "conversation_id") {
+                                conversationId = jsonData.conversationId;
+                                setChatState((prev) => {
+                                    console.log({ prev });
                                     return {
                                         ...prev,
-                                        messages: [
-                                            ...prev.messages.slice(0, -1),
+                                        currentConversation: {
+                                            id: conversationId as string,
+                                            title: "new",
+                                            date: new Date()
+                                                .toISOString()
+                                                .split("T")[0],
+                                            messages: prev.messages.slice(),
+                                        },
+                                    };
+                                });
+                            }
+                            //     setChatState((prev) => ({
+                            //         ...prev,
+                            //         currentConversation: {
+                            //             id: conversationId!,
+                            //             title: "New Conversation",
+                            //             date: new Date().toISOString().split("T")[0],
+                            //             messages: prev.messages,
+                            //         },
+                            //     }));
+                            //     continue;
+                            // }
+
+                            // Handle content updates
+                            if (jsonData.content !== undefined) {
+                                console.log(
+                                    "chat state should be updating here",
+                                    jsonData.content
+                                );
+                                setChatState((prev) => {
+                                    const lastMessage =
+                                        prev.messages[prev.messages.length - 1];
+
+                                    if (lastMessage.role === "assistant") {
+                                        const updatedMessages = [
+                                            ...prev.messages.slice(),
                                             {
                                                 ...lastMessage,
                                                 content:
                                                     lastMessage.content +
-                                                    content,
+                                                    jsonData.content,
                                             },
-                                        ],
-                                    };
-                                }
-                                return prev;
-                            });
-                        } catch (e) {
-                            if (!data.includes("[DONE]")) {
-                                console.error("Failed to parse SSE data:", e);
+                                        ];
+                                        return {
+                                            ...prev,
+                                            messages: updatedMessages,
+                                            currentConversation: {
+                                                ...(prev.currentConversation as any),
+                                                messages: updatedMessages,
+                                            },
+                                        };
+                                    }
+                                    return prev;
+                                });
                             }
+                        } catch (e) {
+                            console.error(
+                                "Failed to parse SSE data:",
+                                e,
+                                "Data:",
+                                data
+                            );
                         }
                     }
                 }
             }
+
+            // After the stream is complete, refresh the conversations list
+            await refetchConversations();
         } catch (error) {
             console.error("Error:", error);
             setChatState((prev) => ({
@@ -262,6 +219,10 @@ export function ChatInterface({
             }));
         }
     };
+
+    useEffect(() => {
+        console.log({ chatState });
+    }, [chatState]);
 
     const { data: selectedConversationData, isLoading: isLoadingConversation } =
         useQuery({
@@ -403,7 +364,16 @@ export function ChatInterface({
                 )}
 
                 <form
-                    onSubmit={handleSubmit}
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        const userMessage = { role: "user", content: input };
+                        setChatState((prev) => ({
+                            ...prev,
+                            messages: [...prev.messages, userMessage],
+                            isChatOpen: true,
+                        }));
+                        handleSubmit(e);
+                    }}
                     className="border-t border-gray-200 p-4"
                 >
                     <div className="flex gap-2">
