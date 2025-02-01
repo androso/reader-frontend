@@ -302,7 +302,7 @@ export function ChatInterface({
             }));
         }
     }, [selectedConversationData]);
-    console.log({ conversationsData });
+
     return (
         <div className={`flex ${!isMobile && "h-full"} relative`}>
             {!isMobile && chatState.isHistoryOpen && (
@@ -340,12 +340,13 @@ export function ChatInterface({
                         )}
                         <button
                             onClick={() =>
-                                setChatState((prev) => ({
-                                    ...prev,
-                                    isChatOpen: false,
-                                    isExpanded: false,
+                                setChatState({
+                                    messages: [],
                                     isHistoryOpen: false,
-                                }))
+                                    isExpanded: false,
+                                    isChatOpen: false,
+                                    currentConversation: null,
+                                })
                             }
                             className="text-gray-500 hover:text-gray-700"
                         >
