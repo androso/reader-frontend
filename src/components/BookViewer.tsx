@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ReactReader } from "@/components/reader/ReactReader/ReactReader";
+import { ReactReader } from "@/components/reader/ReactReader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import useSelectionTooltip from "@/hooks/useSelectionTooltip";
