@@ -5,8 +5,8 @@ import React, {
     useState,
 } from "react";
 import { type SwipeableProps, useSwipeable } from "react-swipeable";
-import { EpubView, type IEpubViewProps } from "./EpubView/EpubView";
-import { type IEpubViewStyle } from "./EpubView/style";
+import { EpubView, type IEpubViewProps } from "./EpubView";
+import { type IEpubViewStyle } from "./style";
 import {
     ReactReaderStyle as defaultStyles,
     type IReactReaderStyle,
