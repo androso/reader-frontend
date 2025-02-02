@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import EpubReader from "@/components/reader-test/EpubReader";
+import EpubReader from "@/components/reader/EpubReader";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { ChatInterface } from "@/components/reader/ChatInterface";
 
