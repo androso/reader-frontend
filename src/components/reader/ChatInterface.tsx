@@ -132,7 +132,7 @@ export function ChatInterface({
                             if (jsonData.type === "conversation_id") {
                                 conversationId = jsonData.conversationId;
                                 setChatState((prev) => {
-                                    console.log({ prev });
+                                    // console.log({ prev });
                                     return {
                                         ...prev,
                                         currentConversation: {
@@ -221,7 +221,7 @@ export function ChatInterface({
     };
 
     useEffect(() => {
-        console.log({ chatState });
+        // console.log({ chatState });
     }, [chatState]);
 
     const { data: selectedConversationData, isLoading: isLoadingConversation } =
