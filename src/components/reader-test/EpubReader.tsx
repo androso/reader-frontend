@@ -63,7 +63,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
     // const { processEpub, isLoading, error, epubContent, zipData } =
     // 	useEpubProcessor();
 
-    const { chaptersLoading, bookChapters } = useEpubJsProcessor(url);
+    const { chaptersLoading, bookChapters, status } = useEpubJsProcessor(url);
     const contentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {

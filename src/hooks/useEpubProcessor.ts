@@ -52,7 +52,12 @@ export const useEpubProcessor = () => {
 export const useEpubJsProcessor = (url: string) => {
     const [bookChapters, setBookChapters] = useState<any[]>([]);
     const [chaptersLoading, setChaptersLoading] = useState(false);
+    const [status, setStatus] = useState<
+        "loading" | "error" | "idle" | "success"
+    >("idle");
+
     const processEpubJs = async (bookUrl: string) => {
+        setStatus("loading");
         const token = localStorage.getItem("token");
         setChaptersLoading(true);
         let book = ePub(bookUrl, {
@@ -73,26 +78,7 @@ export const useEpubJsProcessor = (url: string) => {
             });
         }
         setBookChapters(chapters);
-        // book.loaded.navigation.then((toc) => {
-        //   book.opened.then((book) => {
-        //     let spineItems: Section[] = [];
-        //     book.spine.each((spineItem: Section) => spineItems.push(spineItem));
-        //     const chaptersLoaded = [];
-
-        // book.spine.each(async (itemSection: Section) => {
-        //   if (itemSection) {
-        //     const document = await book.load(itemSection.href);
-        //     setBookChapters((prev) => {
-        //       return [...prev, {
-        //         id: itemSection.url,
-        //         content: document.body.innerHTML
-        //       }];
-        //     })
-        //   }
-        // });
-        // setChaptersLoading(false);
-        //   });
-        // });
+        setStatus("success");
     };
 
     useEffect(() => {
@@ -105,5 +91,6 @@ export const useEpubJsProcessor = (url: string) => {
         processEpubJs,
         bookChapters,
         chaptersLoading,
+        status,
     };
 };
