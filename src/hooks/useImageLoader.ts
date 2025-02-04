@@ -20,12 +20,6 @@ export const useImageLoader = (zipData: JSZip | null, basePath: string) => {
             throw new Error(`Image file not found: ${imagePath}`);
         }
         const arrayBuffer = await imageFile.async("arraybuffer");
-        const bytes = new Uint8Array(arrayBuffer);
-        const binary = bytes.reduce(
-            (data, byte) => data + String.fromCharCode(byte),
-            ""
-        );
-        const base64 = btoa(binary);
         const extension = imagePath.split(".").pop()?.toLowerCase();
         const mimeType =
             extension === "jpg" || extension === "jpeg"
@@ -34,7 +28,12 @@ export const useImageLoader = (zipData: JSZip | null, basePath: string) => {
                   ? "image/png"
                   : "image/gif";
 
-        return `data:${mimeType};base64,${base64}`;
+        const blob = new Blob([arrayBuffer], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        if (!url) {
+            console.log("no url found!!!");
+        }
+        return url;
     };
 
     const loadImage = async (originalPath: string): Promise<string> => {
