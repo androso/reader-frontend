@@ -133,6 +133,8 @@ export const useChapterLoader = (
 
             await Promise.all(stylePromises);
 
+            // Temporarily disabled image loading
+            /*
             const imagePromises = Array.from(doc.querySelectorAll("img")).map(
                 async (img) => {
                     const src = img.getAttribute("src");
@@ -174,6 +176,9 @@ export const useChapterLoader = (
             // const end = performance.now();
             // const durationInSeconds = ((end - start) / 1000).toFixed(2);
             // console.log(`Image promises took ${durationInSeconds} seconds to complete.`);
+            */
+
+            // Remove images instead of loading them
             doc.querySelectorAll("script").forEach((script) => script.remove());
 
             const textBlocks: TextBlock[] = [];
