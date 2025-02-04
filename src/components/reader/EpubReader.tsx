@@ -2,7 +2,7 @@ import React, { useEffect, useRef, memo, useCallback } from "react";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
-import { useChapterLoader } from "./useChapterLoader";
+import { useChapterLoader } from "@/hooks/useChapterLoader";
 import { useTextBlockNavigation } from "@/hooks/useTextBlockNavigation";
 
 interface EpubReaderProps {
