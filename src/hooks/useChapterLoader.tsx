@@ -74,27 +74,50 @@ export const useChapterLoader = (
         async (href: string, currentPath?: string): Promise<string | null> => {
             if (!epubContent || !zipData) return null;
             try {
+                const basePath = currentPath
+                    ? currentPath.substring(0, currentPath.lastIndexOf("/") + 1)
+                    : epubContent.basePath;
                 const paths = [
                     href,
-                    resolveRelativePath(href, epubContent.basePath),
-                    currentPath ? resolveRelativePath(href, currentPath) : null,
+                    `${basePath}${href}`,
+                    resolveRelativePath(href, basePath),
+                    `${epubContent.basePath}${href}`,
                     `${epubContent.basePath}styles/${href}`,
                     `${epubContent.basePath}Styles/${href}`,
                     `${epubContent.basePath}css/${href}`,
+                    `${epubContent.basePath}CSS/${href}`,
                 ].filter(Boolean);
 
                 for (const path of paths) {
                     const cssFile = zipData.file(path);
                     if (cssFile) {
                         const content = await cssFile.async("text");
-                        return content.replace(
-                            /@import\s+['"]([^'"]+)['"]/g,
+                        // Process @import statements
+                        const processedContent = await content.replace(
+                            /@import\s+['"](.*?)['"]/g,
                             async (_, importPath) => {
                                 const importedCss = await loadCssContent(
                                     importPath,
                                     path
                                 );
                                 return importedCss || "";
+                            }
+                        );
+                        // Process relative URLs in CSS
+                        return processedContent.replace(
+                            /url\(['"]?([^'")]+)['"]?\)/g,
+                            (match, url) => {
+                                if (
+                                    url.startsWith("data:") ||
+                                    url.startsWith("http")
+                                ) {
+                                    return match;
+                                }
+                                const absolutePath = resolveRelativePath(
+                                    url,
+                                    basePath
+                                );
+                                return `url('${absolutePath}')`;
                             }
                         );
                     }
@@ -181,10 +204,13 @@ export const useChapterLoader = (
 
             const textBlocks: TextBlock[] = [];
             Array.from(doc.body.children).forEach((child, idx) => {
-                // here i can add identifiers to each text element that i could then use to register the progress of a user on a book
-                // child.classList.add("just-id");
-                const blockElement = document.createElement("div");
+                // Only skip if element is truly empty (no text and no meaningful elements)
+                const hasText = child.textContent?.trim();
+                const hasImages = child.querySelector("img");
+                const hasSvg = child.querySelector("svg");
+                if (!hasText && !hasImages && !hasSvg) return;
 
+                const blockElement = document.createElement("div");
                 blockElement.innerHTML = child.outerHTML;
                 textBlocks.push({
                     id: `${chapterId}-block-${idx}`,

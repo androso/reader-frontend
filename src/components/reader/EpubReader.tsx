@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
 import { useChapterLoader } from "@/hooks/useChapterLoader";
 import { useTextBlockNavigation } from "@/hooks/useTextBlockNavigation";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface EpubReaderProps {
     url: string;
@@ -121,13 +122,17 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                 </div>
                 <div className="max-w-3xl mx-auto  px-6 max-h-[92%] overflow-y-auto">
                     <div className="" ref={contentRef}>
-                        {chapters?.map((chapter) => (
-                            <Chapter
-                                key={chapter.id}
-                                chapter={chapter}
-                                activeTextblockId={activeTextBlockId}
-                            />
-                        ))}
+                        {isLoading ? (
+                            <LoadingSpinner />
+                        ) : (
+                            chapters.map((chapter) => (
+                                <Chapter
+                                    key={chapter.id}
+                                    chapter={chapter}
+                                    activeTextblockId={activeTextBlockId}
+                                />
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
