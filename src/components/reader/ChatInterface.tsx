@@ -63,11 +63,12 @@ export function ChatInterface({
                 ? `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}/messages`
                 : `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`;
 
-            // setChatState((prev) => ({
-            //     ...prev,
-            //     messages: [...prev.messages, userMessage],
-            //     isChatOpen: true,
-            // }));
+            // Add user message to state before sending
+            setChatState((prev) => ({
+                ...prev,
+                messages: [...prev.messages, userMessage],
+                isChatOpen: true,
+            }));
 
             const response = await fetch(endpoint, {
                 method: "POST",
@@ -90,13 +91,10 @@ export function ChatInterface({
             if (!reader) throw new Error("No response stream");
 
             const assistantMessage = { role: "assistant", content: "" };
+            // Add assistant message placeholder
             setChatState((prev) => ({
                 ...prev,
                 messages: [...prev.messages, assistantMessage],
-                currentConversation: {
-                    ...(chatState.currentConversation as any),
-                    messages: [...prev.messages, assistantMessage],
-                },
             }));
 
             let conversationId: string | null = null;
@@ -107,97 +105,73 @@ export function ChatInterface({
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                // Append new chunk to buffer and split into lines
                 buffer += textDecoder.decode(value, { stream: true });
                 const lines = buffer.split("\n");
-                buffer = lines.pop() || ""; // Keep last partial line in buffer
+                buffer = lines.pop() || "";
 
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine || !trimmedLine.startsWith("data: "))
+                        continue;
 
-                    // Check if this is a data line
-                    if (line.startsWith("data: ")) {
-                        const data = line.slice(6).trim();
+                    const data = trimmedLine.slice(6).trim();
+                    if (data === "[DONE]") continue;
 
-                        // Handle the [DONE] message
-                        if (data === "[DONE]") {
+                    try {
+                        const jsonData = JSON.parse(data);
+
+                        if (jsonData.type === "conversation_id") {
+                            // conversationId = jsonData.conversationId;
+                            // setChatState((prev) => ({
+                            //     ...prev,
+                            //     currentConversation: {
+                            //         id: conversationId as string,
+                            //         title: "New conversation",
+                            //         date: new Date().toISOString().split("T")[0],
+                            //         messages: prev.messages,
+                            //     },
+                            // }));
                             continue;
                         }
 
-                        try {
-                            const jsonData = JSON.parse(data);
+                        if (jsonData.content !== undefined) {
+                            setChatState((prev) => {
+                                const messages = [...prev.messages];
+                                const lastMessage =
+                                    messages[messages.length - 1];
 
-                            // Handle conversation ID
-                            if (jsonData.type === "conversation_id") {
-                                conversationId = jsonData.conversationId;
-                                setChatState((prev) => {
-                                    // console.log({ prev });
-                                    return {
-                                        ...prev,
-                                        currentConversation: {
-                                            id: conversationId as string,
-                                            title: "new",
-                                            date: new Date()
-                                                .toISOString()
-                                                .split("T")[0],
-                                            messages: prev.messages.slice(),
-                                        },
+                                if (
+                                    lastMessage &&
+                                    lastMessage.role === "assistant"
+                                ) {
+                                    messages[messages.length - 1] = {
+                                        ...lastMessage,
+                                        content:
+                                            lastMessage.content +
+                                            jsonData.content,
                                     };
-                                });
-                            }
-                            //     setChatState((prev) => ({
-                            //         ...prev,
-                            //         currentConversation: {
-                            //             id: conversationId!,
-                            //             title: "New Conversation",
-                            //             date: new Date().toISOString().split("T")[0],
-                            //             messages: prev.messages,
-                            //         },
-                            //     }));
-                            //     continue;
-                            // }
+                                }
 
-                            // Handle content updates
-                            if (jsonData.content !== undefined) {
-                                console.log(
-                                    "chat state should be updating here",
-                                    jsonData.content
-                                );
-                                setChatState((prev) => {
-                                    const lastMessage =
-                                        prev.messages[prev.messages.length - 1];
-
-                                    if (lastMessage.role === "assistant") {
-                                        const updatedMessages = [
-                                            ...prev.messages.slice(),
-                                            {
-                                                ...lastMessage,
-                                                content:
-                                                    lastMessage.content +
-                                                    jsonData.content,
-                                            },
-                                        ];
-                                        return {
-                                            ...prev,
-                                            messages: updatedMessages,
-                                            currentConversation: {
-                                                ...(prev.currentConversation as any),
-                                                messages: updatedMessages,
-                                            },
-                                        };
-                                    }
-                                    return prev;
-                                });
-                            }
-                        } catch (e) {
-                            console.error(
-                                "Failed to parse SSE data:",
-                                e,
-                                "Data:",
-                                data
-                            );
+                                return {
+                                    ...prev,
+                                    messages,
+                                    currentConversation:
+                                        prev.currentConversation
+                                            ? {
+                                                  ...prev.currentConversation,
+                                                  messages,
+                                              }
+                                            : null,
+                                };
+                            });
                         }
+                    } catch (e) {
+                        console.error(
+                            "Failed to parse SSE data:",
+                            e,
+                            "Data:",
+                            data
+                        );
                     }
                 }
             }
@@ -221,7 +195,7 @@ export function ChatInterface({
     };
 
     useEffect(() => {
-        // console.log({ chatState });
+        console.log({ chatState });
     }, [chatState]);
 
     const { data: selectedConversationData, isLoading: isLoadingConversation } =
@@ -366,12 +340,6 @@ export function ChatInterface({
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        const userMessage = { role: "user", content: input };
-                        setChatState((prev) => ({
-                            ...prev,
-                            messages: [...prev.messages, userMessage],
-                            isChatOpen: true,
-                        }));
                         handleSubmit(e);
                     }}
                     className="border-t border-gray-200 p-4"
