@@ -18,7 +18,7 @@ const MessageList = memo(
     }) => {
         return (
             <ScrollArea
-                className={`${isMobile ? (isExpanded ? "h-full" : "h-[200px]") : "h-full"} p-4 space-y-3`}
+                className={`${isMobile ? (isExpanded ? "h-full" : "h-[200px]") : "h-full"} p-4 space-y-3 overflow-y-scroll`}
             >
                 {(isMobile && !isExpanded ? messages.slice(-2) : messages)
                     .filter(Boolean)
