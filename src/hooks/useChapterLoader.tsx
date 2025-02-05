@@ -139,6 +139,23 @@ export const useChapterLoader = (
             if (!epubContent) throw new Error("No EPUB content available");
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, "text/html");
+            // Process anchor tags to match TOC entries
+            Array.from(doc.querySelectorAll("a[href]")).forEach((anchor) => {
+                const href = anchor.getAttribute("href");
+                const text = anchor.textContent?.trim();
+                if (text && epubContent.toc) {
+                    const sanitizedHref = href?.split(".")[0];
+                    const matchingTocEntry = epubContent.toc.find(
+                        (entry) => entry.id === sanitizedHref
+                    );
+                    if (matchingTocEntry && matchingTocEntry.href) {
+                        anchor.setAttribute(
+                            "href",
+                            `#${matchingTocEntry.href}`
+                        );
+                    }
+                }
+            });
 
             const stylePromises = Array.from(
                 doc.querySelectorAll('link[rel="stylesheet"]')
