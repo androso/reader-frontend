@@ -56,7 +56,6 @@ export function ChatInterface({
     const handleSubmit = async (e: React.FormEvent) => {
         const userMessage = { role: "user", content: input };
         setInput("");
-
         try {
             const token = localStorage.getItem("token");
             const endpoint = chatState.currentConversation
@@ -121,16 +120,7 @@ export function ChatInterface({
                         const jsonData = JSON.parse(data);
 
                         if (jsonData.type === "conversation_id") {
-                            // conversationId = jsonData.conversationId;
-                            // setChatState((prev) => ({
-                            //     ...prev,
-                            //     currentConversation: {
-                            //         id: conversationId as string,
-                            //         title: "New conversation",
-                            //         date: new Date().toISOString().split("T")[0],
-                            //         messages: prev.messages,
-                            //     },
-                            // }));
+                            conversationId = jsonData.conversationId;
                             continue;
                         }
 
@@ -175,8 +165,18 @@ export function ChatInterface({
                     }
                 }
             }
+            if (conversationId) {
+                setChatState((prev) => ({
+                    ...prev,
+                    currentConversation: {
+                        id: conversationId as string,
+                        title: "New conversation",
+                        createdAt: new Date().toISOString().split("T")[0],
+                        messages: prev.messages,
+                    },
+                }));
+            }
 
-            // After the stream is complete, refresh the conversations list
             await refetchConversations();
         } catch (error) {
             console.error("Error:", error);
@@ -193,16 +193,15 @@ export function ChatInterface({
             }));
         }
     };
-
-    useEffect(() => {
-        console.log({ chatState });
-    }, [chatState]);
-
     const { data: selectedConversationData, isLoading: isLoadingConversation } =
         useQuery({
-            queryKey: [`conversation-${chatState?.currentConversation?.id}`],
+            queryKey: [
+                chatState.currentConversation?.id,
+                chatState.currentConversation?.createdAt,
+                chatState.currentConversation?.lastMessageAt,
+            ],
             queryFn: async () => {
-                if (!chatState.currentConversation) return null;
+                if (!chatState.currentConversation?.id) return null;
                 const token = localStorage.getItem("token");
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}`,

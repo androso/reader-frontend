@@ -6,8 +6,12 @@ import { MessageSquareText } from "lucide-react";
 export type Conversation = {
     id: string;
     title: string;
-    date: string;
     messages: Message[];
+    createdAt: string;
+    lastMessageAt?: string;
+    resourceId?: string;
+    resourceType?: string;
+    userId?: string;
 };
 
 function ChatHistory({
@@ -21,7 +25,7 @@ function ChatHistory({
         onSelectConversation({
             id: Date.now().toString(),
             title: "New Conversation",
-            date: new Date().toISOString().split("T")[0],
+            createdAt: new Date().toISOString().split("T")[0],
             messages: [],
         });
     };
