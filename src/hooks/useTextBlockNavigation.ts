@@ -34,7 +34,6 @@ export const useTextBlockNavigation = (
             const progress = JSON.parse(data.progressPosition);
 
             // Return the block ID
-            console.log("progress", progress);
             return progress.progress_block; // This will return something like "c01-block-16"
         } catch (error) {
             console.error("An error ocurred while progress was fetched", error);
@@ -70,7 +69,6 @@ export const useTextBlockNavigation = (
             const bookId = window.location.pathname.split("/")[2];
             const initializeProgress = async () => {
                 const storedId = await fetchProgress(bookId);
-                console.log("stored id", storedId);
                 setActiveTextBlockId(storedId || flatTextBlocks[0].id);
                 const element = document.getElementById(
                     storedId || flatTextBlocks[0].id
@@ -86,12 +84,6 @@ export const useTextBlockNavigation = (
             initializeProgress();
         }
     }, [flatTextBlocks]);
-
-    const saveProgress = (textBlockId: string) => {
-        // store in local storage the id along with the book and chapter so that it is better recognizable
-        const bookId = window.location.pathname.split("/")[2];
-        localStorage.setItem(`book-progress-${bookId}`, textBlockId);
-    };
 
     const getVisibilityRatio = useCallback((element: HTMLElement) => {
         const rect = element.getBoundingClientRect();
@@ -192,7 +184,6 @@ export const useTextBlockNavigation = (
                 if (newIndex !== currTextBlockIndex) {
                     const targetBlock = flatTextBlocks[newIndex];
                     setActiveTextBlockId(targetBlock.id);
-                    saveProgress(targetBlock.id);
                     savingProgress(targetBlock.id);
                     // scroll
                     // we could replace document with the container ref
