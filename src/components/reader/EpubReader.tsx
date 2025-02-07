@@ -96,14 +96,29 @@ const TextBlock = memo(
                 <div
                     className="absolute inset-0 z-10"
                     onMouseDown={handleDragStart}
-                    onTouchStart={handleDragStart}
+                    onTouchStart={(e) => {
+                        const touch = e.touches[0];
+                        setStartX(touch.clientX);
+                    }}
                     onMouseMove={handleDragMove}
-                    onTouchMove={handleDragMove}
+                    onTouchMove={(e) => {
+                        if (
+                            !isDragging &&
+                            Math.abs(e.touches[0].clientX - startX) > 10
+                        ) {
+                            setIsDragging(true);
+                            e.preventDefault();
+                        }
+                        if (isDragging) {
+                            e.preventDefault();
+                            handleDragMove(e);
+                        }
+                    }}
                     onMouseUp={handleDragEnd}
                     onTouchEnd={handleDragEnd}
                     onMouseLeave={handleDragEnd}
                     style={{
-                        touchAction: "none",
+                        touchAction: isDragging ? "none" : "pan-y",
                     }}
                 />
                 <div className="relative">
