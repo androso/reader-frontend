@@ -2,241 +2,53 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SendHorizontal, Maximize2, History } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { motion } from "motion/react";
+import { useMemo } from "react";
 import MessageList, { Message } from "./MessageList";
-import ChatHistory, { Conversation } from "./ChatHistory";
+import ChatHistory from "./ChatHistory";
+import useConversations from "@/hooks/chat/useConversations";
+import { ChatState, initialChatState, useChat } from "@/hooks/chat/useChat";
+
+interface ChatInterfaceProps {
+    isMobile?: boolean;
+    bookId: string;
+}
+
+const ChatLayout = ({
+    isMobile,
+    isExpanded,
+    children,
+}: {
+    isMobile: boolean;
+    isExpanded: boolean;
+    children: React.ReactNode;
+}) => {
+    const layoutClasses = useMemo(() => {
+        const baseClasses = `flex flex-col ${!isMobile && "flex-1 justify-end"} rounded-md`;
+        const mobileClasses = isMobile
+            ? `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
+                  isExpanded ? "h-[80dvh]" : ""
+              }`
+            : "";
+        return `${baseClasses} ${mobileClasses} shadow-lg bg-white`;
+    }, [isMobile, isExpanded]);
+
+    return <div className={layoutClasses}>{children}</div>;
+};
 
 export function ChatInterface({
     isMobile = false,
     bookId,
-}: {
-    isMobile?: boolean;
-    bookId: string;
-}) {
-    const { data: conversationsData, refetch: refetchConversations } = useQuery(
-        {
-            queryKey: [
-                `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
-            ],
-            queryFn: async () => {
-                const token = localStorage.getItem("token");
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch conversations");
-                }
-                return response.json();
-            },
-            enabled: !!bookId,
-        }
-    );
-    const [chatState, setChatState] = useState<{
-        messages: Message[];
-        isHistoryOpen: boolean;
-        isExpanded: boolean;
-        isChatOpen: boolean;
-        currentConversation: Conversation | null;
-    }>({
-        messages: [],
-        isHistoryOpen: false,
-        isExpanded: false,
-        isChatOpen: false,
-        currentConversation: null,
-    });
-    const [input, setInput] = useState("");
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        const userMessage = { role: "user", content: input };
-        setInput("");
-
-        try {
-            const token = localStorage.getItem("token");
-            const endpoint = chatState.currentConversation
-                ? `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}/messages`
-                : `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations`;
-
-            // Add user message to state before sending
-            setChatState((prev) => ({
-                ...prev,
-                messages: [...prev.messages, userMessage],
-                isChatOpen: true,
-            }));
-
-            const response = await fetch(endpoint, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    message: userMessage.content,
-                    role: "user",
-                    messages: [...chatState.messages, userMessage],
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to send message");
-            }
-
-            const reader = response.body?.getReader();
-            if (!reader) throw new Error("No response stream");
-
-            const assistantMessage = { role: "assistant", content: "" };
-            // Add assistant message placeholder
-            setChatState((prev) => ({
-                ...prev,
-                messages: [...prev.messages, assistantMessage],
-            }));
-
-            let conversationId: string | null = null;
-            const textDecoder = new TextDecoder();
-            let buffer = "";
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += textDecoder.decode(value, { stream: true });
-                const lines = buffer.split("\n");
-                buffer = lines.pop() || "";
-
-                for (const line of lines) {
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine || !trimmedLine.startsWith("data: "))
-                        continue;
-
-                    const data = trimmedLine.slice(6).trim();
-                    if (data === "[DONE]") continue;
-
-                    try {
-                        const jsonData = JSON.parse(data);
-
-                        if (jsonData.type === "conversation_id") {
-                            // conversationId = jsonData.conversationId;
-                            // setChatState((prev) => ({
-                            //     ...prev,
-                            //     currentConversation: {
-                            //         id: conversationId as string,
-                            //         title: "New conversation",
-                            //         date: new Date().toISOString().split("T")[0],
-                            //         messages: prev.messages,
-                            //     },
-                            // }));
-                            continue;
-                        }
-
-                        if (jsonData.content !== undefined) {
-                            setChatState((prev) => {
-                                const messages = [...prev.messages];
-                                const lastMessage =
-                                    messages[messages.length - 1];
-
-                                if (
-                                    lastMessage &&
-                                    lastMessage.role === "assistant"
-                                ) {
-                                    messages[messages.length - 1] = {
-                                        ...lastMessage,
-                                        content:
-                                            lastMessage.content +
-                                            jsonData.content,
-                                    };
-                                }
-
-                                return {
-                                    ...prev,
-                                    messages,
-                                    currentConversation:
-                                        prev.currentConversation
-                                            ? {
-                                                  ...prev.currentConversation,
-                                                  messages,
-                                              }
-                                            : null,
-                                };
-                            });
-                        }
-                    } catch (e) {
-                        console.error(
-                            "Failed to parse SSE data:",
-                            e,
-                            "Data:",
-                            data
-                        );
-                    }
-                }
-            }
-
-            // After the stream is complete, refresh the conversations list
-            await refetchConversations();
-        } catch (error) {
-            console.error("Error:", error);
-            setChatState((prev) => ({
-                ...prev,
-                messages: [
-                    ...prev.messages,
-                    {
-                        role: "assistant",
-                        content:
-                            "Sorry, there was an error processing your request.",
-                    },
-                ],
-            }));
-        }
-    };
-
-    useEffect(() => {
-        console.log({ chatState });
-    }, [chatState]);
-
-    const { data: selectedConversationData, isLoading: isLoadingConversation } =
-        useQuery({
-            queryKey: [`conversation-${chatState?.currentConversation?.id}`],
-            queryFn: async () => {
-                if (!chatState.currentConversation) return null;
-                const token = localStorage.getItem("token");
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/book/${bookId}/conversations/${chatState.currentConversation.id}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch conversation");
-                }
-                return response.json();
-            },
-            enabled: !!chatState.currentConversation,
-        });
-
-    const handleSelectConversation = (conversation: Conversation) => {
-        setChatState((prev) => ({
-            ...prev,
-            currentConversation: conversation,
-            isHistoryOpen: false,
-            isChatOpen: true,
-        }));
-    };
-
-    useEffect(() => {
-        if (selectedConversationData) {
-            setChatState((prev) => ({
-                ...prev,
-                messages: selectedConversationData.messages,
-            }));
-        }
-    }, [selectedConversationData]);
+}: ChatInterfaceProps) {
+    const { data: conversationsData, refetch: refetchConversations } =
+        useConversations(bookId);
+    const {
+        chatState,
+        handleSelectConversation,
+        handleSubmit,
+        input,
+        setChatState,
+        setInput,
+    } = useChat(bookId);
 
     return (
         <div className={`flex ${!isMobile && "h-full"} relative`}>
@@ -248,61 +60,13 @@ export function ChatInterface({
                     />
                 </div>
             )}
-            <div
-                className={`flex flex-col ${!isMobile && "flex-1 justify-end"} rounded-md ${
-                    isMobile &&
-                    `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300  ${
-                        chatState.isExpanded ? "h-[80dvh]" : ""
-                    }`
-                } shadow-lg bg-white`}
-            >
+            <ChatLayout isMobile={isMobile} isExpanded={chatState.isExpanded}>
                 {chatState.isChatOpen && (
-                    <div
-                        className={`flex ${chatState.isHistoryOpen ? "justify-end" : "justify-between"} p-2 border-b`}
-                    >
-                        {!chatState.isHistoryOpen && (
-                            <button
-                                onClick={() =>
-                                    setChatState((prev) => ({
-                                        ...prev,
-                                        isExpanded: !prev.isExpanded,
-                                    }))
-                                }
-                                className="text-gray-500 hover:text-gray-700"
-                            >
-                                <Maximize2 className="h-5 w-5" />
-                            </button>
-                        )}
-                        <button
-                            onClick={() =>
-                                setChatState({
-                                    messages: [],
-                                    isHistoryOpen: false,
-                                    isExpanded: false,
-                                    isChatOpen: false,
-                                    currentConversation: null,
-                                })
-                            }
-                            className="text-gray-500 hover:text-gray-700"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-                    </div>
+                    <ChatHeader
+                        chatState={chatState}
+                        setChatState={setChatState}
+                    />
                 )}
-
                 {isMobile &&
                     chatState.isChatOpen &&
                     chatState.isHistoryOpen && (
@@ -314,65 +78,124 @@ export function ChatInterface({
                         </div>
                     )}
                 {chatState.isChatOpen && !chatState.isHistoryOpen && (
-                    <>
-                        {isLoadingConversation ? (
-                            <div className="flex items-center justify-center h-full">
-                                <motion.div
-                                    className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
-                                    animate={{ rotate: 360 }}
-                                    transition={{
-                                        duration: 1,
-                                        repeat: Infinity,
-                                        ease: "linear",
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <MessageList
-                                messages={chatState.messages}
-                                isMobile={isMobile}
-                                isExpanded={chatState.isExpanded}
-                            />
-                        )}
-                    </>
+                    <ChatMessages
+                        messages={chatState.messages}
+                        isMobile={isMobile}
+                        isExpanded={chatState.isExpanded}
+                    />
                 )}
-
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSubmit(e);
+                <ChatInput
+                    input={input}
+                    setInput={setInput}
+                    handleSubmit={handleSubmit}
+                    onHistoryClick={() => {
+                        refetchConversations();
+                        setChatState((prev) => ({
+                            ...prev,
+                            isHistoryOpen: !prev.isHistoryOpen,
+                            isChatOpen: true,
+                            isExpanded: true,
+                        }));
                     }}
-                    className="border-t border-gray-200 p-4"
-                >
-                    <div className="flex gap-2">
-                        <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                                refetchConversations();
-                                setChatState((prev) => ({
-                                    ...prev,
-                                    isHistoryOpen: !prev.isHistoryOpen,
-                                    isChatOpen: true,
-                                    isExpanded: true,
-                                }));
-                            }}
-                        >
-                            <History className="h-5 w-5" />
-                        </Button>
-                        <Input
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Ask about this book..."
-                            className="flex-1"
-                        />
-                        <Button type="submit" size="icon" variant="ghost">
-                            <SendHorizontal className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </form>
-            </div>
+                />
+            </ChatLayout>
         </div>
     );
 }
+
+const ChatHeader = ({
+    chatState,
+    setChatState,
+}: {
+    chatState: ChatState;
+    setChatState: React.Dispatch<React.SetStateAction<ChatState>>;
+}) => (
+    <div
+        className={`flex ${chatState.isHistoryOpen ? "justify-end" : "justify-between"} p-2 border-b`}
+    >
+        {!chatState.isHistoryOpen && (
+            <button
+                onClick={() =>
+                    setChatState((prev) => ({
+                        ...prev,
+                        isExpanded: !prev.isExpanded,
+                    }))
+                }
+                className="text-gray-500 hover:text-gray-700"
+            >
+                <Maximize2 className="h-5 w-5" />
+            </button>
+        )}
+        <button
+            onClick={() => setChatState(initialChatState)}
+            className="text-gray-500 hover:text-gray-700"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+);
+
+const ChatMessages = ({
+    messages,
+    isMobile,
+    isExpanded,
+}: {
+    messages: Message[];
+    isMobile: boolean;
+    isExpanded: boolean;
+}) => (
+    <>
+        <MessageList
+            messages={messages}
+            isMobile={isMobile}
+            isExpanded={isExpanded}
+        />
+    </>
+);
+
+const ChatInput = ({
+    input,
+    setInput,
+    handleSubmit,
+    onHistoryClick,
+}: {
+    input: string;
+    setInput: (value: string) => void;
+    handleSubmit: (e: React.FormEvent) => void;
+    onHistoryClick: () => void;
+}) => (
+    <form onSubmit={handleSubmit} className="border-t border-gray-200 p-4">
+        <div className="flex gap-2">
+            <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={onHistoryClick}
+            >
+                <History className="h-5 w-5" />
+            </Button>
+            <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about this book..."
+                className="flex-1"
+            />
+            <Button type="submit" size="icon" variant="ghost">
+                <SendHorizontal className="h-5 w-5" />
+            </Button>
+        </div>
+    </form>
+);

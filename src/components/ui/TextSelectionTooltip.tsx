@@ -1,23 +1,34 @@
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { TooltipPosition } from "@/types/tooltipTypes";
 
 export default function TextSelectionTooltip({
     position,
     children,
-    extClassNames = "",
 }: {
     position: TooltipPosition;
     children: React.ReactNode;
-    extClassNames?: string;
 }) {
     return (
-        <div
-            className={`absolute bg-gray-800 text-white px-4 py-2 rounded shadow-lg transform -translate-x-1/2 ${extClassNames} z-50`}
-            style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-            }}
-        >
-            {children}
-        </div>
+        <TooltipProvider>
+            <Tooltip open={true}>
+                <TooltipTrigger asChild>
+                    <div
+                        className="absolute w-1 h-1 opacity-0"
+                        style={{
+                            left: `${position.x}px`,
+                            top: `${position.y}px`,
+                        }}
+                    />
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={5}>
+                    {children}
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 }
