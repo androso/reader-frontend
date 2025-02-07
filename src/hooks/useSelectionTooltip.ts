@@ -1,54 +1,23 @@
 import { MousePosition, TooltipPosition } from "@/types/tooltipTypes";
 import { useRef, useState } from "react";
 
-export const adjustSelectionToWords = (contentDocument: any): Range | null => {
-    const selection = contentDocument.getSelection();
-    if (!selection || selection.rangeCount === 0) return null;
+export const getSelectionInfo = (): { text: string; range: Range | null } => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0)
+        return { text: "", range: null };
 
     const range = selection.getRangeAt(0);
+    const text = selection.toString().trim();
 
-    const startNode = range.startContainer;
-    const endNode = range.endContainer;
-
-    if (
-        startNode.nodeType === Node.TEXT_NODE &&
-        endNode.nodeType === Node.TEXT_NODE
-    ) {
-        const startText = startNode.textContent || "";
-        const endText = endNode.textContent || "";
-
-        let startOffset = range.startOffset;
-        let endOffset = range.endOffset;
-
-        // Adjust start to word boundary
-        while (startOffset > 0 && !/\s/.test(startText[startOffset - 1])) {
-            startOffset--;
-        }
-
-        // Adjust end to word boundary
-        while (endOffset < endText.length && !/\s/.test(endText[endOffset])) {
-            endOffset++;
-        }
-
-        const newRange = range.cloneRange();
-        newRange.setStart(startNode, startOffset);
-        newRange.setEnd(endNode, endOffset);
-
-        selection.removeAllRanges();
-        selection.addRange(newRange);
-
-        return newRange;
-    }
-
-    return range;
+    return { text, range };
 };
 
 export const calculateDistance = (
     start: MousePosition,
-    end: MousePosition,
+    end: MousePosition
 ): number => {
     return Math.sqrt(
-        Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2),
+        Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)
     );
 };
 
@@ -66,15 +35,14 @@ export default function useSelectionTooltip({
         x: 0,
         y: 0,
     });
-    const mouseStartPositionRef =
-        useRef<null | MousePosition>(null);
+    const mouseStartPositionRef = useRef<null | MousePosition>(null);
     const handleMouseDown = (e: MouseEvent) => {
         // register the initial position and avoid creating a tooltip right away
-        mouseStartPositionRef.current = { x: e.clientX, y: e.clientY }
+        mouseStartPositionRef.current = { x: e.clientX, y: e.clientY };
         setShowTooltip(false);
-    }
+    };
 
-    const handleSelection = (e: MouseEvent, contentDocument: any) => {
+    const handleSelection = (e: MouseEvent) => {
         if (!mouseStartPositionRef.current) return;
         const distance = calculateDistance(mouseStartPositionRef.current, {
             x: e.clientX,
@@ -83,33 +51,26 @@ export default function useSelectionTooltip({
         const isDrag = distance > minDragDistance;
         if (!isDrag) {
             setShowTooltip(false);
-            mouseStartPositionRef.current = null
+            mouseStartPositionRef.current = null;
             return;
         }
 
-        const adjustedRange = adjustSelectionToWords(contentDocument);
-        if (!adjustedRange) {
+        const { text, range } = getSelectionInfo();
+        if (!range || !text) {
             setShowTooltip(false);
-            mouseStartPositionRef.current = null
+            mouseStartPositionRef.current = null;
             return;
         }
 
-        const selection = contentDocument.getSelection();
-        if (!selection || selection.toString().trim().length === 0) {
-            setShowTooltip(false);
-            mouseStartPositionRef.current = null
-            return;
-        }
-
-        const rect = adjustedRange.getBoundingClientRect();
+        const rect = range.getBoundingClientRect();
         setTooltipPosition({
             x: rect.left + rect.width / 2,
-            y: rect.top - tooltipOffset,
+            y: rect.bottom + 5,
         });
 
         setShowTooltip(true);
-        mouseStartPositionRef.current = null
-    }
+        mouseStartPositionRef.current = null;
+    };
 
     return {
         showTooltip,
@@ -119,4 +80,3 @@ export default function useSelectionTooltip({
         handleSelection,
     };
 }
-    

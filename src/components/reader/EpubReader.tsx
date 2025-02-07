@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, memo, useCallback } from "react";
+import React, { useEffect, useRef, memo, useCallback, useState } from "react";
+import { useSwipeable } from "react-swipeable";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
@@ -20,17 +21,56 @@ const TextBlock = memo(
         id: string;
         content: string;
         isActive: boolean;
-    }) => (
-        <div
-            id={id}
-            className={`mb-4 p-4 transition-all ${
-                isActive
-                    ? "border-l-4 border-blue-500 bg-blue-50"
-                    : "border-l-4 border-transparent"
-            }`}
-            dangerouslySetInnerHTML={{ __html: content }}
-        />
-    )
+    }) => {
+        const [offset, setOffset] = React.useState(0);
+        const [isDragging, setIsDragging] = React.useState(false);
+        const [startX, setStartX] = React.useState(0);
+
+        const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+            setIsDragging(true);
+            const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+            setStartX(clientX);
+            e.preventDefault();
+        };
+
+        const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+            if (!isDragging) return;
+            const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+            const deltaX = clientX - startX;
+            setOffset(Math.min(Math.max(0, deltaX), 100));
+        };
+
+        const handleDragEnd = () => {
+            setIsDragging(false);
+            setOffset(0);
+        };
+
+        return (
+            <div
+                id={id}
+                className={`mb-4 p-4 transition-all transform select-none cursor-grab active:cursor-grabbing ${
+                    isActive
+                        ? "border-l-4 border-blue-500 bg-blue-50"
+                        : "border-l-4 border-transparent"
+                } ${isDragging ? "shadow-lg" : "shadow-sm"}`}
+                style={{
+                    transform: `translateX(${offset}px)`,
+                    transition: !isDragging
+                        ? "transform 0.2s ease-out"
+                        : "none",
+                    touchAction: "none",
+                }}
+                onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
+                onMouseMove={handleDragMove}
+                onTouchMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onTouchEnd={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+                dangerouslySetInnerHTML={{ __html: content }}
+            />
+        );
+    }
 );
 
 TextBlock.displayName = "TextBlock";
@@ -59,6 +99,99 @@ const Chapter = memo(
 
 Chapter.displayName = "Chapter";
 
+const useTextSelection = (tooltipContent: string = "hello") => {
+    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+    const [isVisible, setIsVisible] = useState(false);
+    const tooltipRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const expandSelectionToWord = () => {
+            const sel = window.getSelection();
+            if (!sel?.rangeCount) return;
+
+            const range = sel.getRangeAt(0);
+            const start = range.startContainer;
+            const end = range.endContainer;
+
+            // Only expand if there's an actual selection (not just a click)
+            if (range.startOffset === range.endOffset) return;
+
+            // Only process text nodes
+            if (
+                start.nodeType === Node.TEXT_NODE &&
+                end.nodeType === Node.TEXT_NODE
+            ) {
+                const startText = start.textContent || "";
+                const endText = end.textContent || "";
+
+                // Find word boundaries
+                let startOffset = range.startOffset;
+                while (
+                    startOffset > 0 &&
+                    /\S/.test(startText[startOffset - 1])
+                ) {
+                    startOffset--;
+                }
+
+                let endOffset = range.endOffset;
+                while (
+                    endOffset < endText.length &&
+                    /\S/.test(endText[endOffset])
+                ) {
+                    endOffset++;
+                }
+
+                // Update the range
+                range.setStart(start, startOffset);
+                range.setEnd(end, endOffset);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        };
+
+        const handleSelectionChange = () => {
+            const selection = window.getSelection();
+            if (selection?.toString().length) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+
+                // Calculate position considering viewport bounds
+                const viewportWidth = window.innerWidth;
+                const tooltipWidth = tooltipRef.current?.offsetWidth || 0;
+                const leftPosition = Math.min(
+                    rect.right,
+                    viewportWidth - tooltipWidth - 20
+                );
+
+                setTooltipPosition({
+                    x: leftPosition,
+                    y:
+                        rect.top -
+                        (tooltipRef.current?.offsetHeight || 0) -
+                        10 +
+                        window.scrollY,
+                });
+                setIsVisible(true);
+            } else {
+                setIsVisible(false);
+            }
+        };
+
+        document.addEventListener("mouseup", expandSelectionToWord);
+        document.addEventListener("selectionchange", handleSelectionChange);
+
+        return () => {
+            document.removeEventListener("mouseup", expandSelectionToWord);
+            document.removeEventListener(
+                "selectionchange",
+                handleSelectionChange
+            );
+        };
+    }, []);
+
+    return { tooltipRef, tooltipPosition, isVisible };
+};
+
 const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
     const { processEpub, isLoading, error, epubContent, zipData } =
         useEpubProcessor();
@@ -68,7 +201,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
         zipData
     );
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-
+    // const { isVisible, tooltipPosition, tooltipRef } = useTextSelection();
     const { activeTextBlockId } = useTextBlockNavigation(
         flatTextBlocks,
         contentRef
@@ -122,6 +255,19 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                 </div>
                 <div className="max-w-3xl mx-auto  px-6 max-h-[92%] overflow-y-auto">
                     <div className="" ref={contentRef}>
+                        {/* Tooltip */}
+                        {/* <div
+                            ref={tooltipRef}
+                            className={`fixed bg-gray-800 text-white px-3 py-2 rounded shadow-lg transition-opacity duration-200 pointer-events-none ${
+                                isVisible ? "opacity-100" : "opacity-0"
+                            }`}
+                            style={{
+                                left: `${tooltipPosition.x}px`,
+                                top: `${tooltipPosition.y}px`,
+                            }}
+                        >
+                            hello
+                        </div> */}
                         {isLoading ? (
                             <LoadingSpinner />
                         ) : (
