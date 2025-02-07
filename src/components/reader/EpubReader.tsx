@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, memo, useCallback, useState } from "react";
-import { useSwipeable } from "react-swipeable";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
@@ -48,27 +47,38 @@ const TextBlock = memo(
         return (
             <div
                 id={id}
-                className={`mb-4 p-4 transition-all transform select-none cursor-grab active:cursor-grabbing ${
-                    isActive
-                        ? "border-l-4 border-blue-500 bg-blue-50"
-                        : "border-l-4 border-transparent"
-                } ${isDragging ? "shadow-lg" : "shadow-sm"}`}
-                style={{
-                    transform: `translateX(${offset}px)`,
-                    transition: !isDragging
-                        ? "transform 0.2s ease-out"
-                        : "none",
-                    touchAction: "none",
-                }}
-                onMouseDown={handleDragStart}
-                onTouchStart={handleDragStart}
-                onMouseMove={handleDragMove}
-                onTouchMove={handleDragMove}
-                onMouseUp={handleDragEnd}
-                onTouchEnd={handleDragEnd}
-                onMouseLeave={handleDragEnd}
-                dangerouslySetInnerHTML={{ __html: content }}
-            />
+                className={`transition-all transform select-none cursor-grab active:cursor-grabbing relative  `}
+            >
+                <div
+                    className="absolute inset-0 z-10"
+                    onMouseDown={handleDragStart}
+                    onTouchStart={handleDragStart}
+                    onMouseMove={handleDragMove}
+                    onTouchMove={handleDragMove}
+                    onMouseUp={handleDragEnd}
+                    onTouchEnd={handleDragEnd}
+                    onMouseLeave={handleDragEnd}
+                    style={{
+                        touchAction: "none",
+                    }}
+                />
+                <div
+                    className={` mb-4 p-4 ${
+                        isActive
+                            ? "border-l-4 border-blue-500 bg-blue-50"
+                            : "border-l-4 border-transparent"
+                    } ${isDragging ? "shadow-lg" : "shadow-sm"}`}
+                    style={{
+                        transform: `translateX(${offset}px)`,
+                        transition: !isDragging
+                            ? "transform 0.2s ease-out"
+                            : "none",
+                        userSelect: "none",
+                        pointerEvents: "none",
+                    }}
+                    dangerouslySetInnerHTML={{ __html: content }}
+                />
+            </div>
         );
     }
 );
