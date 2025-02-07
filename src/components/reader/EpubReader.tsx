@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, memo, useCallback, useState } from "react";
-import { Menu } from "lucide-react";
+import React, { useEffect, useRef, memo, useState } from "react";
+import { Menu, MessageCircle, Bookmark, Share2, X } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { useEpubProcessor } from "@/hooks/useEpubProcessor";
 import { useChapterLoader } from "@/hooks/useChapterLoader";
@@ -24,16 +24,21 @@ const TextBlock = memo(
         const [offset, setOffset] = React.useState(0);
         const [isDragging, setIsDragging] = React.useState(false);
         const [startX, setStartX] = React.useState(0);
+        const [isLocked, setIsLocked] = React.useState(false);
+        const dragThreshold = 80;
 
         const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-            setIsDragging(true);
-            const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-            setStartX(clientX);
-            e.preventDefault();
+            if (!isLocked) {
+                setIsDragging(true);
+                const clientX =
+                    "touches" in e ? e.touches[0].clientX : e.clientX;
+                setStartX(clientX);
+                e.preventDefault();
+            }
         };
 
         const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-            if (!isDragging) return;
+            if (!isDragging || isLocked) return;
             const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
             const deltaX = clientX - startX;
             setOffset(Math.min(Math.max(0, deltaX), 100));
@@ -41,7 +46,46 @@ const TextBlock = memo(
 
         const handleDragEnd = () => {
             setIsDragging(false);
+            if (offset > dragThreshold) {
+                setOffset(100);
+                setIsLocked(true);
+            } else {
+                setOffset(0);
+            }
+        };
+
+        const handleUnlock = () => {
+            setIsLocked(false);
             setOffset(0);
+        };
+
+        const renderActionIcons = () => {
+            if (!isLocked && offset === 0) return null;
+            const opacity = Math.min((offset / dragThreshold) * 1.2, 1);
+            const scale = 0.6 + opacity * 0.4;
+
+            return (
+                <div className="absolute left-0 top-0 h-full flex flex-col items-center justify-center gap-2 pl-4">
+                    <button
+                        className="p-2 bg-blue-100 rounded-full hover:bg-blue-200 transition-all transform"
+                        style={{ opacity, transform: `scale(${scale})` }}
+                    >
+                        <MessageCircle className="h-5 w-5 text-blue-600" />
+                    </button>
+                    <button
+                        className="p-2 bg-blue-100 rounded-full hover:bg-blue-200 transition-all transform"
+                        style={{ opacity, transform: `scale(${scale})` }}
+                    >
+                        <Bookmark className="h-5 w-5 text-blue-600" />
+                    </button>
+                    <button
+                        className="p-2 bg-blue-100 rounded-full hover:bg-blue-200 transition-all transform"
+                        style={{ opacity, transform: `scale(${scale})` }}
+                    >
+                        <Share2 className="h-5 w-5 text-blue-600" />
+                    </button>
+                </div>
+            );
         };
 
         return (
@@ -62,22 +106,33 @@ const TextBlock = memo(
                         touchAction: "none",
                     }}
                 />
-                <div
-                    className={` mb-4 p-4 ${
-                        isActive
-                            ? "border-l-4 border-blue-500 bg-blue-50"
-                            : "border-l-4 border-transparent"
-                    } ${isDragging ? "shadow-lg" : "shadow-sm"}`}
-                    style={{
-                        transform: `translateX(${offset}px)`,
-                        transition: !isDragging
-                            ? "transform 0.2s ease-out"
-                            : "none",
-                        userSelect: "none",
-                        pointerEvents: "none",
-                    }}
-                    dangerouslySetInnerHTML={{ __html: content }}
-                />
+                <div className="relative">
+                    {renderActionIcons()}
+                    <div
+                        className={`mb-4 p-4 ${
+                            isActive
+                                ? "border-l-4 border-blue-500 bg-blue-50"
+                                : "border-l-4 border-transparent"
+                        } ${isDragging || isLocked ? "shadow-lg" : "shadow-sm"}`}
+                        style={{
+                            transform: `translateX(${offset}px)`,
+                            transition: !isDragging
+                                ? "transform 0.2s ease-out"
+                                : "none",
+                            userSelect: "none",
+                            pointerEvents: "none",
+                        }}
+                        dangerouslySetInnerHTML={{ __html: content }}
+                    />
+                    {isLocked && (
+                        <button
+                            onClick={handleUnlock}
+                            className="absolute right-4 top-4 p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                        >
+                            <X className="h-4 w-4 text-gray-600" />
+                        </button>
+                    )}
+                </div>
             </div>
         );
     }
