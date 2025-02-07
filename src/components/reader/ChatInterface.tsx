@@ -13,6 +13,28 @@ interface ChatInterfaceProps {
     bookId: string;
 }
 
+const ChatLayout = ({
+    isMobile,
+    isExpanded,
+    children,
+}: {
+    isMobile: boolean;
+    isExpanded: boolean;
+    children: React.ReactNode;
+}) => {
+    const layoutClasses = useMemo(() => {
+        const baseClasses = `flex flex-col ${!isMobile && "flex-1 justify-end"} rounded-md`;
+        const mobileClasses = isMobile
+            ? `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
+                  isExpanded ? "h-[80dvh]" : ""
+              }`
+            : "";
+        return `${baseClasses} ${mobileClasses} shadow-lg bg-white`;
+    }, [isMobile, isExpanded]);
+
+    return <div className={layoutClasses}>{children}</div>;
+};
+
 export function ChatInterface({
     isMobile = false,
     bookId,
@@ -28,16 +50,6 @@ export function ChatInterface({
         setInput,
     } = useChat(bookId);
 
-    const chatLayout = useMemo(() => {
-        const baseClasses = `flex flex-col ${!isMobile && "flex-1 justify-end"} rounded-md`;
-        const mobileClasses = isMobile
-            ? `absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 shadow-lg shadow-blue-500/50 border-2 border-slate-300 ${
-                  chatState.isExpanded ? "h-[80dvh]" : ""
-              }`
-            : "";
-        return `${baseClasses} ${mobileClasses} shadow-lg bg-white`;
-    }, [isMobile, chatState.isExpanded]);
-
     return (
         <div className={`flex ${!isMobile && "h-full"} relative`}>
             {!isMobile && chatState.isHistoryOpen && (
@@ -48,14 +60,13 @@ export function ChatInterface({
                     />
                 </div>
             )}
-            <div className={chatLayout}>
+            <ChatLayout isMobile={isMobile} isExpanded={chatState.isExpanded}>
                 {chatState.isChatOpen && (
                     <ChatHeader
                         chatState={chatState}
                         setChatState={setChatState}
                     />
                 )}
-
                 {isMobile &&
                     chatState.isChatOpen &&
                     chatState.isHistoryOpen && (
@@ -66,7 +77,6 @@ export function ChatInterface({
                             />
                         </div>
                     )}
-
                 {chatState.isChatOpen && !chatState.isHistoryOpen && (
                     <ChatMessages
                         messages={chatState.messages}
@@ -74,7 +84,6 @@ export function ChatInterface({
                         isExpanded={chatState.isExpanded}
                     />
                 )}
-
                 <ChatInput
                     input={input}
                     setInput={setInput}
@@ -89,7 +98,7 @@ export function ChatInterface({
                         }));
                     }}
                 />
-            </div>
+            </ChatLayout>
         </div>
     );
 }
