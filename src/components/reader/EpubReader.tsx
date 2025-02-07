@@ -28,12 +28,10 @@ const TextBlock = memo(
         const dragThreshold = 80;
 
         const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+            const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+            setStartX(clientX);
             if (!isLocked) {
                 setIsDragging(true);
-                const clientX =
-                    "touches" in e ? e.touches[0].clientX : e.clientX;
-                setStartX(clientX);
-                e.preventDefault();
             }
         };
 
@@ -57,6 +55,14 @@ const TextBlock = memo(
         const handleUnlock = () => {
             setIsLocked(false);
             setOffset(0);
+        };
+
+        const handleParagraphClick = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isLocked) {
+                handleUnlock();
+            }
         };
 
         const renderActionIcons = () => {
@@ -124,29 +130,24 @@ const TextBlock = memo(
                 <div className="relative">
                     {renderActionIcons()}
                     <div
-                        className={`mb-4 p-4 ${
+                        className={`mb-4 p-4 relative z-10 ${
                             isActive
                                 ? "border-l-4 border-blue-500 bg-blue-50"
                                 : "border-l-4 border-transparent"
-                        } ${isDragging || isLocked ? "shadow-lg" : "shadow-sm"}`}
+                        } ${isDragging || isLocked ? "shadow-lg" : "shadow-sm"} ${
+                            isLocked ? "cursor-pointer" : ""
+                        }`}
+                        onClick={handleParagraphClick}
                         style={{
                             transform: `translateX(${offset}px)`,
                             transition: !isDragging
                                 ? "transform 0.2s ease-out"
                                 : "none",
                             userSelect: "none",
-                            pointerEvents: "none",
+                            pointerEvents: isLocked ? "auto" : "none",
                         }}
                         dangerouslySetInnerHTML={{ __html: content }}
                     />
-                    {isLocked && (
-                        <button
-                            onClick={handleUnlock}
-                            className="absolute right-4 top-4 p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                        >
-                            <X className="h-4 w-4 text-gray-600" />
-                        </button>
-                    )}
                 </div>
             </div>
         );
