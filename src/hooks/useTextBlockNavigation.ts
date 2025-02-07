@@ -42,7 +42,7 @@ export const useTextBlockNavigation = (
     };
 
     //save progress
-    const savingProgress = async (textBlockId: string) => {
+    const saveProgress = async (textBlockId: string) => {
         const bookId = window.location.pathname.split("/")[2];
         try {
             const response = await fetch(
@@ -143,7 +143,7 @@ export const useTextBlockNavigation = (
                 const mostVisibleId = findMostVisibleBlock();
                 if (mostVisibleId && mostVisibleId !== activeTextBlockId) {
                     setActiveTextBlockId(mostVisibleId);
-                    savingProgress(mostVisibleId);
+                    saveProgress(mostVisibleId);
                 }
             }, 1000);
         }
@@ -184,7 +184,7 @@ export const useTextBlockNavigation = (
                 if (newIndex !== currTextBlockIndex) {
                     const targetBlock = flatTextBlocks[newIndex];
                     setActiveTextBlockId(targetBlock.id);
-                    savingProgress(targetBlock.id);
+                    saveProgress(targetBlock.id);
                     // scroll
                     // we could replace document with the container ref
                     document.getElementById(targetBlock.id)?.scrollIntoView({
