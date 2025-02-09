@@ -352,13 +352,13 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                         {isLoading ? (
                             <LoadingSpinner />
                         ) : (
-                            chapters.map((chapter) => (
+                            chapters.length > 4 && (
                                 <Chapter
-                                    key={chapter.id}
-                                    chapter={chapter}
+                                    key={chapters[4].id}
+                                    chapter={chapters[4]}
                                     activeTextblockId={activeTextBlockId}
                                 />
-                            ))
+                            )
                         )}
                     </div>
                 </div>
