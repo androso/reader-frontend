@@ -352,13 +352,23 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                         {isLoading ? (
                             <LoadingSpinner />
                         ) : (
-                            chapters.length > 4 && (
-                                <Chapter
-                                    key={chapters[4].id}
-                                    chapter={chapters[4]}
-                                    activeTextblockId={activeTextBlockId}
-                                />
-                            )
+                            chapters.map((chapter) => {
+                                const chapterId =
+                                    activeTextBlockId?.split("-")[0];
+                                // Show active chapter if found, otherwise show all chapters
+                                if (!chapterId || chapter.id === chapterId) {
+                                    return (
+                                        <Chapter
+                                            key={chapter.id}
+                                            chapter={chapter}
+                                            activeTextblockId={
+                                                activeTextBlockId
+                                            }
+                                        />
+                                    );
+                                }
+                                return null;
+                            })
                         )}
                     </div>
                 </div>
