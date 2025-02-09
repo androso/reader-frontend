@@ -348,6 +348,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
                 onTocItemClick={handleTocItemClick}
+                activeHref={activeHref}
             />
 
             <div className="h-full relative overflow-x-hidden">
@@ -360,7 +361,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                     </button>
                 </div>
                 <div className="max-w-3xl mx-auto px-6 max-h-[92%] overflow-y-auto overflow-x-hidden">
-                    <div className="" ref={contentRef}>
+                    <div className="pb-32" ref={contentRef}>
                         {/* Tooltip */}
                         {/* <div
                             ref={tooltipRef}
