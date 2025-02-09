@@ -5,6 +5,7 @@ export const useTextBlockNavigation = (
     flatTextBlocks: TextBlock[],
     contentRef: React.RefObject<HTMLDivElement | null>
 ) => {
+    const [isLoading, setIsLoading] = useState(true);
     const [activeTextBlockId, setActiveTextBlockId] = useState<string | null>(
         null
     );
@@ -72,16 +73,20 @@ export const useTextBlockNavigation = (
         if (!activeTextBlockId && flatTextBlocks.length > 0) {
             const bookId = window.location.pathname.split("/")[2];
             const initializeProgress = async () => {
-                const storedId = await fetchProgress(bookId);
-                setActiveTextBlockId(storedId || flatTextBlocks[0].id);
-                const element = document.getElementById(
-                    storedId || flatTextBlocks[0].id
-                );
-                if (element) {
-                    element.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                    });
+                try {
+                    const storedId = await fetchProgress(bookId);
+                    setActiveTextBlockId(storedId || flatTextBlocks[0].id);
+                    const element = document.getElementById(
+                        storedId || flatTextBlocks[0].id
+                    );
+                    if (element) {
+                        element.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
+                    }
+                } finally {
+                    setIsLoading(false);
                 }
             };
             //this retrieves the progress from the server
@@ -210,5 +215,6 @@ export const useTextBlockNavigation = (
 
     return {
         activeTextBlockId,
+        isLoading,
     };
 };

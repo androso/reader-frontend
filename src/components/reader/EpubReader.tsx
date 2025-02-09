@@ -282,11 +282,14 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
         zipData
     );
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+    const [activeHref, setActiveHref] = React.useState<string | null>(null);
     // const { isVisible, tooltipPosition, tooltipRef } = useTextSelection();
-    const { activeTextBlockId } = useTextBlockNavigation(
-        flatTextBlocks,
-        contentRef
-    );
+    const { activeTextBlockId, isLoading: textBlockIsLoading } =
+        useTextBlockNavigation(flatTextBlocks, contentRef);
+
+    const handleTocItemClick = (hrefId: string) => {
+        setActiveHref(hrefId);
+    };
 
     useEffect(() => {
         processEpub(url);
@@ -297,6 +300,27 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
             loadAllChapters();
         }
     }, [epubContent, zipData, loadAllChapters]);
+
+    // Set initial activeHref based on activeTextBlockId
+    useEffect(() => {
+        if (!textBlockIsLoading && activeTextBlockId && chapters.length > 0) {
+            const chapterId = activeTextBlockId.split("-")[0];
+            const chapter = chapters.find((c) => c.hrefId.includes(chapterId));
+            if (chapter && !activeHref) {
+                setActiveHref(chapter.hrefId);
+                // Give time for the chapter to render before scrolling
+                setTimeout(() => {
+                    const element = document.getElementById(activeTextBlockId);
+                    if (element) {
+                        element.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
+                    }
+                }, 100);
+            }
+        }
+    }, [textBlockIsLoading, activeTextBlockId, chapters]);
 
     if (isLoading) {
         return (
@@ -323,6 +347,7 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                 epubContent={epubContent}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
+                onTocItemClick={handleTocItemClick}
             />
 
             <div className="h-full relative overflow-x-hidden">
@@ -349,14 +374,14 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                         >
                             hello
                         </div> */}
-                        {isLoading ? (
+                        {isLoading || textBlockIsLoading ? (
                             <LoadingSpinner />
                         ) : (
                             chapters.map((chapter) => {
-                                const chapterId =
-                                    activeTextBlockId?.split("-")[0];
-                                // Show active chapter if found, otherwise show all chapters
-                                if (!chapterId || chapter.id === chapterId) {
+                                if (
+                                    !activeHref ||
+                                    chapter.hrefId === activeHref
+                                ) {
                                     return (
                                         <Chapter
                                             key={chapter.id}

@@ -5,10 +5,11 @@ interface SidebarProps {
     epubContent: EpubContent;
     isOpen: boolean;
     onClose: () => void;
+    onTocItemClick: (href: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = memo(
-    ({ epubContent, isOpen, onClose }) => {
+    ({ epubContent, isOpen, onClose, onTocItemClick }) => {
         const [expandedItems, setExpandedItems] = useState<Set<string>>(
             new Set()
         );
@@ -67,6 +68,10 @@ const Sidebar: React.FC<SidebarProps> = memo(
                         style={{
                             paddingLeft: `${entry.level * 1.5}rem`,
                         }}
+                        onClick={() => {
+                            onTocItemClick(entry.href);
+                            onClose();
+                        }}
                     >
                         {hasChildrenItems && (
                             <button
@@ -78,7 +83,6 @@ const Sidebar: React.FC<SidebarProps> = memo(
                         )}
                         <a
                             href={`#${entry.href}`}
-                            onClick={onClose}
                             className={`text-decoration-none flex-1 py-1 ${entry.isPage ? "text-gray-600 text-sm" : ""}`}
                         >
                             {entry.title}
