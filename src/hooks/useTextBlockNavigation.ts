@@ -34,7 +34,8 @@ export const useTextBlockNavigation = (
             const progress = JSON.parse(data.progressPosition);
 
             // Return the block ID
-            return progress.progress_block; // This will return something like "c01-block-16"
+            return progress.progress_block;
+            // Note: progress.progress_chapter is now also available if needed
         } catch (error) {
             console.error("An error ocurred while progress was fetched", error);
             return null;
@@ -53,7 +54,10 @@ export const useTextBlockNavigation = (
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ progress_block: textBlockId }),
+                    body: JSON.stringify({
+                        progress_block: textBlockId,
+                        progress_chapter: textBlockId.split("-")[0], // assuming format like "c01-block-16"
+                    }),
                 }
             );
             if (!response.ok) {
