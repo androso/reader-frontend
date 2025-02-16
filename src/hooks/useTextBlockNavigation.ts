@@ -31,14 +31,25 @@ export const useTextBlockNavigation = (
 
             const data = await response.json();
 
-            // Parse the progressPosition string back to an object
-            const progress = JSON.parse(data.progressPosition);
+            // Check if progressPosition is already a string or needs parsing
+            let progress;
+            if (typeof data.progressPosition === "string") {
+                try {
+                    progress = JSON.parse(data.progressPosition);
+                } catch {
+                    // If parsing fails, assume it's already the block ID string
+                    return data.progressPosition;
+                }
+            } else {
+                progress = data.progressPosition;
+            }
 
-            // Return the block ID
             return progress.progress_block;
-            // Note: progress.progress_chapter is now also available if needed
         } catch (error) {
-            console.error("An error ocurred while progress was fetched", error);
+            console.error(
+                "An error occurred while progress was fetched",
+                error
+            );
             return null;
         }
     };
@@ -212,7 +223,7 @@ export const useTextBlockNavigation = (
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [flatTextBlocks, activeTextBlockId]);
-
+    console.log(activeTextBlockId);
     return {
         activeTextBlockId,
         isLoading,
