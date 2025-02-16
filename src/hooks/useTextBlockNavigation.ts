@@ -1,6 +1,11 @@
 import { TextBlock } from "@/types/EpubReader";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+interface ProgressResponse {
+    progressPosition: string;
+    progressChapter: string;
+}
+
 export const useTextBlockNavigation = (
     flatTextBlocks: TextBlock[],
     contentRef: React.RefObject<HTMLDivElement | null>
@@ -29,16 +34,19 @@ export const useTextBlockNavigation = (
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            // Check if progressPosition is already a string or needs parsing
+            const data: ProgressResponse = await response.json();
 
-            // Parse the progressPosition string back to an object
-            const progress = JSON.parse(data.progressPosition);
-
-            // Return the block ID
-            return progress.progress_block;
-            // Note: progress.progress_chapter is now also available if needed
+            // Return both position and chapter
+            return {
+                blockId: data.progressPosition,
+                chapterId: data.progressChapter,
+            };
         } catch (error) {
-            console.error("An error ocurred while progress was fetched", error);
+            console.error(
+                "An error occurred while progress was fetched",
+                error
+            );
             return null;
         }
     };
@@ -75,9 +83,11 @@ export const useTextBlockNavigation = (
             const initializeProgress = async () => {
                 try {
                     const storedId = await fetchProgress(bookId);
-                    setActiveTextBlockId(storedId || flatTextBlocks[0].id);
+                    setActiveTextBlockId(
+                        storedId?.blockId || flatTextBlocks[0].id
+                    );
                     const element = document.getElementById(
-                        storedId || flatTextBlocks[0].id
+                        storedId?.blockId || flatTextBlocks[0].id
                     );
                     if (element) {
                         element.scrollIntoView({
@@ -212,7 +222,6 @@ export const useTextBlockNavigation = (
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [flatTextBlocks, activeTextBlockId]);
-
     return {
         activeTextBlockId,
         isLoading,
