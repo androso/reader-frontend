@@ -1,6 +1,11 @@
 import { TextBlock } from "@/types/EpubReader";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+interface ProgressResponse {
+    progressPosition: string;
+    progressChapter: string;
+}
+
 export const useTextBlockNavigation = (
     flatTextBlocks: TextBlock[],
     contentRef: React.RefObject<HTMLDivElement | null>
@@ -29,22 +34,14 @@ export const useTextBlockNavigation = (
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
-
             // Check if progressPosition is already a string or needs parsing
-            let progress;
-            if (typeof data.progressPosition === "string") {
-                try {
-                    progress = JSON.parse(data.progressPosition);
-                } catch {
-                    // If parsing fails, assume it's already the block ID string
-                    return data.progressPosition;
-                }
-            } else {
-                progress = data.progressPosition;
-            }
+            const data: ProgressResponse = await response.json();
 
-            return progress.progress_block;
+            // Return both position and chapter
+            return {
+                blockId: data.progressPosition,
+                chapterId: data.progressChapter,
+            };
         } catch (error) {
             console.error(
                 "An error occurred while progress was fetched",
@@ -86,9 +83,11 @@ export const useTextBlockNavigation = (
             const initializeProgress = async () => {
                 try {
                     const storedId = await fetchProgress(bookId);
-                    setActiveTextBlockId(storedId || flatTextBlocks[0].id);
+                    setActiveTextBlockId(
+                        storedId?.blockId || flatTextBlocks[0].id
+                    );
                     const element = document.getElementById(
-                        storedId || flatTextBlocks[0].id
+                        storedId?.blockId || flatTextBlocks[0].id
                     );
                     if (element) {
                         element.scrollIntoView({
