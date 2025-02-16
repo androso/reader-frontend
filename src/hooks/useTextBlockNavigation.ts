@@ -222,7 +222,6 @@ export const useTextBlockNavigation = (
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [flatTextBlocks, activeTextBlockId]);
-    console.log(activeTextBlockId);
     return {
         activeTextBlockId,
         isLoading,
