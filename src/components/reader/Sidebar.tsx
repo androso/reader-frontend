@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = memo(
                             paddingLeft: `${entry.level * 1.5}rem`,
                         }}
                         onClick={() => {
-                            onTocItemClick(entry.href);
+                            onTocItemClick(entry.href!);
                             onClose();
                         }}
                     >

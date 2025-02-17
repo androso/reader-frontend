@@ -19,25 +19,22 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
         epubContent,
         zipData
     );
+    const [activeChapter, setActiveChapter] = React.useState<any>(null);
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
     const [activeHref, setActiveHref] = React.useState<string | null>(null);
-    // const { isVisible, tooltipPosition, tooltipRef } = useTextSelection();
     const { activeTextBlockId, isLoading: textBlockIsLoading } =
         useTextBlockNavigation(flatTextBlocks, contentRef);
 
     const handleTocItemClick = (hrefId: string) => {
-        setActiveHref(hrefId);
+        const targetChapter = chapters.find((chapter) =>
+            chapter.hrefId.includes(hrefId)
+        );
+        setActiveChapter(targetChapter);
     };
 
     useEffect(() => {
         processEpub(url);
     }, [url, processEpub]);
-
-    useEffect(() => {
-        if (epubContent && chapters) {
-            console.log({ epubContent, chapters });
-        }
-    }, [epubContent, chapters]);
 
     useEffect(() => {
         if (epubContent && zipData) {
@@ -49,8 +46,11 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
     useEffect(() => {
         if (!textBlockIsLoading && activeTextBlockId && chapters.length > 0) {
             const chapterId = activeTextBlockId.split("-")[0];
-            const chapter = chapters.find((c) => c.hrefId.includes(chapterId));
+            const chapter = chapters.find(
+                (c) => c.hrefId.includes(chapterId) || c.id.includes(chapterId)
+            );
             if (chapter && !activeHref) {
+                setActiveChapter(chapter);
                 setActiveHref(chapter.hrefId);
                 // Give time for the chapter to render before scrolling
                 setTimeout(() => {
@@ -119,49 +119,20 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                         >
                             hello
                         </div> */}
-                        {isLoading || textBlockIsLoading ? (
+                        {isLoading || textBlockIsLoading || !activeChapter ? (
                             <LoadingSpinner />
                         ) : (
-                            chapters.map((chapter) => {
-                                if (
-                                    !activeHref ||
-                                    chapter.hrefId === activeHref
-                                ) {
-                                    const currentChapterIndex =
-                                        chapters.findIndex(
-                                            (c) => c.hrefId === activeHref
-                                        );
-                                    const handleNextChapter = () => {
-                                        const nextChapter =
-                                            chapters[currentChapterIndex + 1];
-                                        if (nextChapter) {
-                                            setActiveHref(nextChapter.hrefId);
-                                            contentRef.current?.parentElement?.scrollTo(
-                                                {
-                                                    top: 0,
-                                                    behavior: "smooth",
-                                                }
-                                            );
-                                        }
-                                    };
-
-                                    return (
-                                        <Chapter
-                                            key={chapter.id}
-                                            chapter={chapter}
-                                            activeTextblockId={
-                                                activeTextBlockId
-                                            }
-                                            onNextChapter={handleNextChapter}
-                                            isLastChapter={
-                                                currentChapterIndex ===
-                                                chapters.length - 1
-                                            }
-                                        />
+                            <Chapter
+                                activeTextblockId={activeTextBlockId}
+                                chapter={activeChapter}
+                                isLastChapter={false}
+                                onNextChapter={() => {
+                                    const nextChapter = chapters.findIndex(
+                                        (ch) => ch.id === activeChapter.id
                                     );
-                                }
-                                return null;
-                            })
+                                    setActiveChapter(chapters[nextChapter + 1]);
+                                }}
+                            />
                         )}
                     </div>
                 </div>

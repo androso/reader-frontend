@@ -36,12 +36,7 @@ export const useTextBlockNavigation = (
                 return null;
             }
 
-            // Parse the progressPosition string back to an object
-            const progress = JSON.parse(data.progressPosition);
-
-            // Return the block ID
-            return progress.progress_block;
-            // Note: progress.progress_chapter is now also available if needed
+            return data.progressPosition;
         } catch (error) {
             console.error("An error ocurred while progress was fetched", error);
             return null;

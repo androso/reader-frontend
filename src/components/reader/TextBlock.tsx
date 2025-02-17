@@ -1,3 +1,4 @@
+import { Bookmark, MessageCircle, Share2 } from "lucide-react";
 import React, { memo } from "react";
 
 const TextBlock = memo(
