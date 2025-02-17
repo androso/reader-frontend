@@ -47,8 +47,9 @@ export const useTextBlockNavigation = (
     const [hasInitialProgress, setHasInitialProgress] = useState(false);
 
     const saveProgress = async (textBlockId: string) => {
-        if (!hasInitialProgress) {
-            setHasInitialProgress(true);
+        console.log("saveProgress", { hasInitialProgress });
+        if (!textBlockId) {
+            console.log("no textblock id");
             return;
         }
         const bookId = window.location.pathname.split("/")[2];
@@ -159,11 +160,15 @@ export const useTextBlockNavigation = (
 
             scrollTimeout.current = setTimeout(() => {
                 const mostVisibleId = findMostVisibleBlock();
-                if (mostVisibleId && mostVisibleId !== activeTextBlockId) {
-                    setActiveTextBlockId(mostVisibleId);
+                if (mostVisibleId) {
+                    console.log({ mostVisibleId });
                     saveProgress(mostVisibleId);
+                    if (mostVisibleId !== activeTextBlockId) {
+                        console.log({ mostVisibleId, activeTextBlockId });
+                        setActiveTextBlockId(mostVisibleId);
+                    }
                 }
-            }, 1000);
+            }, 300);
         }
     }, [activeTextBlockId, isManualScroll]);
 
@@ -203,18 +208,15 @@ export const useTextBlockNavigation = (
                     const targetBlock = flatTextBlocks[newIndex];
                     setActiveTextBlockId(targetBlock.id);
                     saveProgress(targetBlock.id);
-                    // scroll
-                    // we could replace document with the container ref
                     document.getElementById(targetBlock.id)?.scrollIntoView({
                         behavior: "smooth",
                         block: "center",
                     });
                 }
 
-                // we enable scroll after the animation of the keydown is done
                 setTimeout(() => {
                     setIsManualScroll(false);
-                }, 1000);
+                }, 300);
             }
         };
 
