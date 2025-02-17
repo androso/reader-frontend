@@ -31,6 +31,11 @@ export const useTextBlockNavigation = (
 
             const data = await response.json();
 
+            // Handle null progressPosition
+            if (!data.progressPosition) {
+                return null;
+            }
+
             // Parse the progressPosition string back to an object
             const progress = JSON.parse(data.progressPosition);
 
@@ -44,7 +49,13 @@ export const useTextBlockNavigation = (
     };
 
     //save progress
+    const [hasInitialProgress, setHasInitialProgress] = useState(false);
+
     const saveProgress = async (textBlockId: string) => {
+        if (!hasInitialProgress) {
+            setHasInitialProgress(true);
+            return;
+        }
         const bookId = window.location.pathname.split("/")[2];
         try {
             const response = await fetch(
@@ -75,6 +86,9 @@ export const useTextBlockNavigation = (
             const initializeProgress = async () => {
                 try {
                     const storedId = await fetchProgress(bookId);
+                    if (storedId) {
+                        setHasInitialProgress(true);
+                    }
                     setActiveTextBlockId(storedId || flatTextBlocks[0].id);
                     const element = document.getElementById(
                         storedId || flatTextBlocks[0].id
