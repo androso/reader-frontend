@@ -131,6 +131,11 @@ const EpubReader: React.FC<EpubReaderProps> = memo(({ url }) => {
                                         (ch) => ch.id === activeChapter.id
                                     );
                                     setActiveChapter(chapters[nextChapter + 1]);
+                                    setTimeout(() => {
+                                        contentRef.current?.scrollIntoView({
+                                            behavior: "smooth",
+                                        });
+                                    }, 100);
                                 }}
                             />
                         )}
