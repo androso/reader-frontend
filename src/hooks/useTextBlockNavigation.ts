@@ -31,12 +31,12 @@ export const useTextBlockNavigation = (
 
             const data = await response.json();
 
-            // Parse the progressPosition string back to an object
-            const progress = JSON.parse(data.progressPosition);
+            // Handle null progressPosition
+            if (!data.progressPosition) {
+                return null;
+            }
 
-            // Return the block ID
-            return progress.progress_block;
-            // Note: progress.progress_chapter is now also available if needed
+            return data.progressPosition;
         } catch (error) {
             console.error("An error ocurred while progress was fetched", error);
             return null;
@@ -44,7 +44,14 @@ export const useTextBlockNavigation = (
     };
 
     //save progress
+    const [hasInitialProgress, setHasInitialProgress] = useState(false);
+
     const saveProgress = async (textBlockId: string) => {
+        console.log("saveProgress", { hasInitialProgress });
+        if (!textBlockId) {
+            console.log("no textblock id");
+            return;
+        }
         const bookId = window.location.pathname.split("/")[2];
         try {
             const response = await fetch(
@@ -75,6 +82,9 @@ export const useTextBlockNavigation = (
             const initializeProgress = async () => {
                 try {
                     const storedId = await fetchProgress(bookId);
+                    if (storedId) {
+                        setHasInitialProgress(true);
+                    }
                     setActiveTextBlockId(storedId || flatTextBlocks[0].id);
                     const element = document.getElementById(
                         storedId || flatTextBlocks[0].id
@@ -150,11 +160,15 @@ export const useTextBlockNavigation = (
 
             scrollTimeout.current = setTimeout(() => {
                 const mostVisibleId = findMostVisibleBlock();
-                if (mostVisibleId && mostVisibleId !== activeTextBlockId) {
-                    setActiveTextBlockId(mostVisibleId);
+                if (mostVisibleId) {
+                    console.log({ mostVisibleId });
                     saveProgress(mostVisibleId);
+                    if (mostVisibleId !== activeTextBlockId) {
+                        console.log({ mostVisibleId, activeTextBlockId });
+                        setActiveTextBlockId(mostVisibleId);
+                    }
                 }
-            }, 1000);
+            }, 300);
         }
     }, [activeTextBlockId, isManualScroll]);
 
@@ -194,18 +208,15 @@ export const useTextBlockNavigation = (
                     const targetBlock = flatTextBlocks[newIndex];
                     setActiveTextBlockId(targetBlock.id);
                     saveProgress(targetBlock.id);
-                    // scroll
-                    // we could replace document with the container ref
                     document.getElementById(targetBlock.id)?.scrollIntoView({
                         behavior: "smooth",
                         block: "center",
                     });
                 }
 
-                // we enable scroll after the animation of the keydown is done
                 setTimeout(() => {
                     setIsManualScroll(false);
-                }, 1000);
+                }, 300);
             }
         };
 
