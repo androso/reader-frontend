@@ -130,7 +130,7 @@ function Home() {
                             key={book.id}
                             className="relative transition-colors hover:bg-slate-200 p-5 cursor-pointer"
                             onClick={() =>
-                                router.push(
+                                    router.push(
                                     `/read/${book.fileKey}?bookId=${book.id}`
                                 )
                             }

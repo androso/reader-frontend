@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import EpubReader from "@/components/reader/EpubReader";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { ChatInterface } from "@/components/reader/ChatInterface";
+import { useLocation } from "wouter";
 
 export default function Reader() {
     const params = useParams();
@@ -12,7 +13,7 @@ export default function Reader() {
     const isMobile = width < 768;
     const searchParams = useSearchParams();
     const bookId = searchParams.get("bookId");
-
+    
     return (
         <div className="h-[100dvh] bg-[#D7D7D7] ">
             <div
