@@ -32,26 +32,35 @@ export function useUser() {
 export function useGoogleSignIn() {
 	return useMutation({
 		mutationFn: async (token: string) => {
-			const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ token }),
-			});
+			try {
+				const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ token }),
+				});
 
-			if (!res.ok) {
-				throw new Error("Authentication failed");
+				if (!res.ok) {
+					throw new Error("Authentication failed");
+				}
+
+				const data = await res.json();
+				localStorage.setItem("token", data.token);
+				return data;
+			} catch (error) {
+				console.error("Error in Google sign-in mutation:", error);
+				throw error;
 			}
-
-			const data = await res.json();
-			localStorage.setItem("token", data.token);
-			return data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
-			});
+			try {
+				queryClient.invalidateQueries({
+					queryKey: [`${process.env.NEXT_PUBLIC_API_URL}/api/user`],
+				});
+			} catch (error) {
+				console.error("Error in onSuccess callback:", error);
+			}
 		},
 	});
 }
